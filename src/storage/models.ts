@@ -4,6 +4,25 @@ export type AuthType = 'password' | 'privateKey' | 'none';
 
 export type DeviceCategory = 'openwrt' | 'raspberrypi' | 'linux_server' | 'router' | 'custom';
 
+export type LanguageType = 'tr' | 'en';
+
+export type ExecutionModeType = 'autonomous' | 'copilot' | 'advisory';
+
+export type AIProviderType =
+  | 'google_web_session'
+  | 'lmstudio'
+  | 'ollama'
+  | 'custom_openai'
+  | 'gemini'
+  | 'deepseek'
+  | 'groq'
+  | 'openrouter'
+  | 'openai'
+  | 'anthropic'
+  | 'mistral';
+
+export type AIProviderName = AIProviderType;
+
 export interface DeviceConnectionConfig {
   id: string;
   name: string;
@@ -55,14 +74,13 @@ export interface DeviceBlueprint {
   networkInterfaces: NetworkInterfaceInfo[];
   isOpenWrt: boolean;
   openWrtVersion?: string;
+  summary: string;
   openWrtConfigs?: {
     system?: string;
     network?: string;
     wireless?: string;
+    firewall?: string;
   };
-  runningServices?: string[];
-  installedPackagesCount?: number;
-  summary: string;
 }
 
 export interface MemoryLogEntry {
@@ -70,65 +88,73 @@ export interface MemoryLogEntry {
   deviceId: string;
   timestamp: string;
   action: string;
-  commandExecuted?: string;
   resultSummary?: string;
-  aiNotes?: string;
+  commandExecuted?: string;
 }
 
-export type AIProviderName = 'openai' | 'anthropic' | 'gemini' | 'google_web_session' | 'lmstudio';
-
-export interface AIProviderConfig {
-  provider: AIProviderName;
-  apiKey?: string;
-  model: string;
-  customEndpoint?: string;
-  enabled: boolean;
-  autoApproveSafeCommands: boolean;
-  temperature?: number;
-}
-
-export interface AppSettings {
-  activeProvider: AIProviderName;
-  providers: Record<AIProviderName, AIProviderConfig>;
-  tray: {
-    minimizeToTray: boolean;
-    closeToTray: boolean;
-    showNotifications: boolean;
-  };
-  terminal: {
-    fontSize: number;
-    fontFamily: string;
-    theme: 'retro-dark' | 'retro-amber' | 'retro-matrix' | 'classic-light';
-    cursorBlink: boolean;
-    scrollback: number;
-  };
-  masterPasswordHash?: string;
-  masterSalt?: string;
-}
-
-export interface ChatMessage {
+export interface DeviceMemoryLog {
   id: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
+  deviceId: string;
   timestamp: string;
-  deviceId?: string;
-  commandSuggestion?: {
-    command: string;
-    description: string;
-    isDangerous: boolean;
-    status: 'pending' | 'approved' | 'rejected' | 'executed' | 'failed';
-    output?: string;
-  };
+  eventType: 'scan' | 'command_execution' | 'config_change' | 'diagnostic';
+  title: string;
+  content: string;
 }
 
 export interface SFTPFileItem {
   name: string;
   path: string;
   isDirectory: boolean;
+  type?: 'd' | '-' | 'l';
   size: number;
   modifyTime: number;
-  accessTime: number;
-  permissions: string;
+  accessTime?: number;
+  permissions?: string;
   owner?: number;
   group?: number;
+}
+
+export interface AIProviderConfig {
+  apiKey?: string;
+  model?: string;
+  endpoint?: string;
+  customEndpoint?: string;
+  enabled?: boolean;
+  autoApproveSafeCommands?: boolean;
+  temperature?: number;
+  provider?: string;
+}
+
+export interface AppSettings {
+  language: LanguageType;
+  executionMode: ExecutionModeType;
+  activeProvider: AIProviderType;
+  providers: Record<string, AIProviderConfig>;
+  tray: {
+    closeToTray: boolean;
+    minimizeToTray: boolean;
+    startMinimized?: boolean;
+    showNotifications?: boolean;
+  };
+  terminal: {
+    theme: string;
+    fontSize: number;
+    fontFamily: string;
+    cursorBlink?: boolean;
+    scrollback?: number;
+  };
+}
+
+export interface ChatMessage {
+  id: string;
+  deviceId?: string;
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+  timestamp: string;
+  commandSuggestion?: {
+    command: string;
+    description: string;
+    isDangerous: boolean;
+    status: 'pending' | 'approved' | 'rejected' | 'executed' | 'failed';
+  };
 }

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NetCommander AI - Ayarlar & Cihaz Yöneticisi</title>
+  <title data-i18n="settings_title">NetCommander AI - Ayarlar & Cihaz Yöneticisi</title>
   <link rel="stylesheet" href="css/retro_theme.css">
   <link rel="stylesheet" href="css/components.css">
   <style>
@@ -64,6 +64,20 @@
       gap: 10px;
       flex-shrink: 0;
     }
+    .provider-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 16px;
+    }
+    .provider-card-box {
+      background: var(--bg-primary);
+      padding: 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
   </style>
 </head>
 <body data-theme="retro-dark">
@@ -72,12 +86,12 @@
     
     <!-- Üst Sekme Navigasyonu -->
     <nav class="settings-nav-bar">
-      <button class="settings-nav-btn active" data-subtab="tab-devices">🖥️ Cihaz Yöneticisi</button>
-      <button class="settings-nav-btn" data-subtab="tab-ai-providers">🤖 AI Sağlayıcıları</button>
-      <button class="settings-nav-btn" data-subtab="tab-google-session">🌐 Google AI Pro (Web)</button>
-      <button class="settings-nav-btn" data-subtab="tab-lmstudio">🖥️ LM Studio (Yerel)</button>
-      <button class="settings-nav-btn" data-subtab="tab-preferences">🛡️ Tercihler & Tema</button>
-      <button class="settings-nav-btn" data-subtab="tab-debug-logs">📜 Hata Ayıklama & Loglar</button>
+      <button class="settings-nav-btn active" data-subtab="tab-devices" data-i18n="nav_devices">🖥️ Cihaz Yöneticisi</button>
+      <button class="settings-nav-btn" data-subtab="tab-ai-providers" data-i18n="nav_ai_providers">🤖 AI Sağlayıcıları (Tümü)</button>
+      <button class="settings-nav-btn" data-subtab="tab-google-session" data-i18n="nav_google_session">🌐 Google AI Pro (Web)</button>
+      <button class="settings-nav-btn" data-subtab="tab-local-llms" data-i18n="nav_local_llms">💻 Yerel Modeller (LM Studio & Ollama)</button>
+      <button class="settings-nav-btn" data-subtab="tab-preferences" data-i18n="nav_preferences">🛡️ Tercihler & Dil</button>
+      <button class="settings-nav-btn" data-subtab="tab-debug-logs" data-i18n="nav_debug_logs">📜 Hata Ayıklama & Loglar</button>
     </nav>
 
     <!-- Sekme İçerikleri -->
@@ -87,10 +101,10 @@
       <section id="tab-devices" class="settings-subtab-pane">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
           <div>
-            <strong style="font-size: 14px;">Kayıtlı Ağ Cihazları</strong>
-            <p style="font-size: 12px; color: var(--text-muted);">Cihazlarınıza tek tıkla bağlanabilir, düzenleyebilir veya yeni cihaz ekleyebilirsiniz.</p>
+            <strong style="font-size: 14px;" data-i18n="devices_header_title">Kayıtlı Ağ Cihazları</strong>
+            <p style="font-size: 12px; color: var(--text-muted);" data-i18n="devices_header_desc">Cihazlarınıza tek tıkla bağlanabilir, düzenleyebilir veya yeni cihaz ekleyebilirsiniz.</p>
           </div>
-          <button id="btn-add-device-dialog" class="btn btn-primary">➕ Yeni Cihaz Ekle</button>
+          <button id="btn-add-device-dialog" class="btn btn-primary" data-i18n="btn_add_device">➕ Yeni Cihaz Ekle</button>
         </div>
 
         <div id="devices-grid" class="devices-grid">
@@ -98,73 +112,165 @@
         </div>
       </section>
 
-      <!-- Sekme 2: AI Sağlayıcıları & API Anahtarları -->
+      <!-- Sekme 2: AI Sağlayıcıları (Genişletilmiş Yelpaze) -->
       <section id="tab-ai-providers" class="settings-subtab-pane" style="display: none;">
         <div class="form-group" style="max-width: 500px; margin-bottom: 20px;">
-          <label class="form-label" style="font-size: 13px; font-weight: 600;">Aktif Yapay Zeka Motoru</label>
-          <select id="settings-active-provider" class="form-select" style="font-size: 13px;">
-            <option value="google_web_session">🌐 Google AI Pro / Gemini Web Oturumu (API Key Gerekmez)</option>
-            <option value="lmstudio">🖥️ LM Studio (Yerel LLM - localhost:1234)</option>
-            <option value="gemini">Google Gemini API</option>
-            <option value="openai">OpenAI (ChatGPT API)</option>
-            <option value="anthropic">Anthropic Claude API</option>
+          <label class="form-label" style="font-size: 13px; font-weight: 600;" data-i18n="lbl_active_ai_engine">Aktif Yapay Zeka Motoru</label>
+          <select id="settings-active-provider" class="form-select" style="font-size: 13px; padding: 8px;">
+            <option value="google_web_session" data-i18n="opt_ai_google_web">🌐 Google AI Pro / Gemini Web (API Key Gerekmez)</option>
+            <option value="lmstudio" data-i18n="opt_ai_lmstudio">💻 LM Studio (Yerel - localhost:1234)</option>
+            <option value="ollama" data-i18n="opt_ai_ollama">🦙 Ollama (Yerel - localhost:11434)</option>
+            <option value="custom_openai" data-i18n="opt_ai_custom">⚙️ Özel OpenAI Uyumlu Yerel/Uzak Uç Nokta</option>
+            <option value="deepseek" data-i18n="opt_ai_deepseek">🐋 DeepSeek API (DeepSeek-V3 & R1)</option>
+            <option value="groq" data-i18n="opt_ai_groq">⚡ Groq API (Ultra Hızlı Llama 3.3)</option>
+            <option value="openrouter" data-i18n="opt_ai_openrouter">🔀 OpenRouter API (Yüzlerce Model)</option>
+            <option value="gemini" data-i18n="opt_ai_gemini">Google Gemini API</option>
+            <option value="openai" data-i18n="opt_ai_openai">OpenAI (ChatGPT API)</option>
+            <option value="anthropic" data-i18n="opt_ai_anthropic">Anthropic Claude API</option>
+            <option value="mistral" data-i18n="opt_ai_mistral">Mistral AI API</option>
           </select>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px;">
-          <!-- Gemini API -->
-          <div style="background: var(--bg-primary); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
-            <div style="font-weight: 600; font-size: 13px; margin-bottom: 10px;">Google Gemini API</div>
+        <div class="provider-grid">
+          <!-- DeepSeek API -->
+          <div class="provider-card-box">
+            <div style="font-weight: 600; font-size: 13px; color: var(--accent-cyan);">DeepSeek API</div>
             <div class="form-group">
-              <label class="form-label">API Anahtarı</label>
+              <label class="form-label" data-i18n="lbl_api_key">API Anahtarı</label>
+              <input type="password" id="cfg-deepseek-key" class="form-input form-input-mono" placeholder="sk-..." />
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="lbl_model">Model</label>
+              <select id="cfg-deepseek-model" class="form-select">
+                <option value="deepseek-chat">deepseek-chat (DeepSeek-V3)</option>
+                <option value="deepseek-reasoner">deepseek-reasoner (DeepSeek-R1)</option>
+              </select>
+            </div>
+            <button class="btn btn-sm btn-test-ai" data-provider="deepseek" data-i18n="btn_test_connection">Bağlantıyı Test Et</button>
+            <span id="test-result-deepseek" style="font-size: 11px;"></span>
+          </div>
+
+          <!-- Groq API -->
+          <div class="provider-card-box">
+            <div style="font-weight: 600; font-size: 13px; color: var(--accent-cyan);">Groq API (Ultra Fast)</div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="lbl_api_key">API Anahtarı</label>
+              <input type="password" id="cfg-groq-key" class="form-input form-input-mono" placeholder="gsk_..." />
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="lbl_model">Model</label>
+              <select id="cfg-groq-model" class="form-select">
+                <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile</option>
+                <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
+                <option value="qwen-2.5-32b">qwen-2.5-32b</option>
+              </select>
+            </div>
+            <button class="btn btn-sm btn-test-ai" data-provider="groq" data-i18n="btn_test_connection">Bağlantıyı Test Et</button>
+            <span id="test-result-groq" style="font-size: 11px;"></span>
+          </div>
+
+          <!-- OpenRouter API -->
+          <div class="provider-card-box">
+            <div style="font-weight: 600; font-size: 13px; color: var(--accent-cyan);">OpenRouter API</div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="lbl_api_key">API Anahtarı</label>
+              <input type="password" id="cfg-openrouter-key" class="form-input form-input-mono" placeholder="sk-or-..." />
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="lbl_model">Model ID</label>
+              <input type="text" id="cfg-openrouter-model" class="form-input form-input-mono" value="meta-llama/llama-3.3-70b-instruct" />
+            </div>
+            <button class="btn btn-sm btn-test-ai" data-provider="openrouter" data-i18n="btn_test_connection">Bağlantıyı Test Et</button>
+            <span id="test-result-openrouter" style="font-size: 11px;"></span>
+          </div>
+
+          <!-- Gemini API -->
+          <div class="provider-card-box">
+            <div style="font-weight: 600; font-size: 13px; color: var(--accent-cyan);">Google Gemini API</div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="lbl_api_key">API Anahtarı</label>
               <input type="password" id="cfg-gemini-key" class="form-input form-input-mono" placeholder="AIzaSy..." />
             </div>
             <div class="form-group">
-              <label class="form-label">Model</label>
+              <label class="form-label" data-i18n="lbl_model">Model</label>
               <select id="cfg-gemini-model" class="form-select">
                 <option value="gemini-2.5-flash">gemini-2.5-flash</option>
                 <option value="gemini-2.5-pro">gemini-2.5-pro</option>
                 <option value="gemini-1.5-pro">gemini-1.5-pro</option>
               </select>
             </div>
-            <button class="btn btn-sm btn-test-ai" data-provider="gemini">Bağlantıyı Test Et</button>
-            <span id="test-result-gemini" style="font-size: 11px; margin-left: 8px;"></span>
+            <button class="btn btn-sm btn-test-ai" data-provider="gemini" data-i18n="btn_test_connection">Bağlantıyı Test Et</button>
+            <span id="test-result-gemini" style="font-size: 11px;"></span>
           </div>
 
           <!-- OpenAI API -->
-          <div style="background: var(--bg-primary); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
-            <div style="font-weight: 600; font-size: 13px; margin-bottom: 10px;">OpenAI API</div>
+          <div class="provider-card-box">
+            <div style="font-weight: 600; font-size: 13px; color: var(--accent-cyan);">OpenAI API</div>
             <div class="form-group">
-              <label class="form-label">API Anahtarı</label>
+              <label class="form-label" data-i18n="lbl_api_key">API Anahtarı</label>
               <input type="password" id="cfg-openai-key" class="form-input form-input-mono" placeholder="sk-..." />
             </div>
             <div class="form-group">
-              <label class="form-label">Model</label>
+              <label class="form-label" data-i18n="lbl_model">Model</label>
               <select id="cfg-openai-model" class="form-select">
                 <option value="gpt-4o-mini">gpt-4o-mini</option>
                 <option value="gpt-4o">gpt-4o</option>
               </select>
             </div>
-            <button class="btn btn-sm btn-test-ai" data-provider="openai">Bağlantıyı Test Et</button>
-            <span id="test-result-openai" style="font-size: 11px; margin-left: 8px;"></span>
+            <button class="btn btn-sm btn-test-ai" data-provider="openai" data-i18n="btn_test_connection">Bağlantıyı Test Et</button>
+            <span id="test-result-openai" style="font-size: 11px;"></span>
           </div>
 
           <!-- Claude API -->
-          <div style="background: var(--bg-primary); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
-            <div style="font-weight: 600; font-size: 13px; margin-bottom: 10px;">Anthropic Claude API</div>
+          <div class="provider-card-box">
+            <div style="font-weight: 600; font-size: 13px; color: var(--accent-cyan);">Anthropic Claude API</div>
             <div class="form-group">
-              <label class="form-label">API Anahtarı</label>
+              <label class="form-label" data-i18n="lbl_api_key">API Anahtarı</label>
               <input type="password" id="cfg-anthropic-key" class="form-input form-input-mono" placeholder="sk-ant-..." />
             </div>
             <div class="form-group">
-              <label class="form-label">Model</label>
+              <label class="form-label" data-i18n="lbl_model">Model</label>
               <select id="cfg-anthropic-model" class="form-select">
                 <option value="claude-3-5-sonnet-20241022">claude-3-5-sonnet</option>
                 <option value="claude-3-haiku-20240307">claude-3-haiku</option>
               </select>
             </div>
-            <button class="btn btn-sm btn-test-ai" data-provider="anthropic">Bağlantıyı Test Et</button>
-            <span id="test-result-anthropic" style="font-size: 11px; margin-left: 8px;"></span>
+            <button class="btn btn-sm btn-test-ai" data-provider="anthropic" data-i18n="btn_test_connection">Bağlantıyı Test Et</button>
+            <span id="test-result-anthropic" style="font-size: 11px;"></span>
+          </div>
+
+          <!-- Mistral API -->
+          <div class="provider-card-box">
+            <div style="font-weight: 600; font-size: 13px; color: var(--accent-cyan);">Mistral AI API</div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="lbl_api_key">API Anahtarı</label>
+              <input type="password" id="cfg-mistral-key" class="form-input form-input-mono" placeholder="mistral-..." />
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="lbl_model">Model</label>
+              <input type="text" id="cfg-mistral-model" class="form-input form-input-mono" value="mistral-large-latest" />
+            </div>
+            <button class="btn btn-sm btn-test-ai" data-provider="mistral" data-i18n="btn_test_connection">Bağlantıyı Test Et</button>
+            <span id="test-result-mistral" style="font-size: 11px;"></span>
+          </div>
+
+          <!-- Custom OpenAI Endpoint -->
+          <div class="provider-card-box">
+            <div style="font-weight: 600; font-size: 13px; color: var(--accent-cyan);">Özel OpenAI Uyumlu Uç Nokta</div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="lbl_endpoint_url">Uç Nokta URL</label>
+              <input type="text" id="cfg-custom-endpoint" class="form-input form-input-mono" placeholder="http://192.168.1.50:8000/v1" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="lbl_model">Model Adı</label>
+              <input type="text" id="cfg-custom-model" class="form-input form-input-mono" placeholder="default" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="lbl_api_key">API Key (Varsa)</label>
+              <input type="password" id="cfg-custom-key" class="form-input form-input-mono" />
+            </div>
+            <button class="btn btn-sm btn-test-ai" data-provider="custom_openai" data-i18n="btn_test_connection">Bağlantıyı Test Et</button>
+            <span id="test-result-custom_openai" style="font-size: 11px;"></span>
           </div>
         </div>
       </section>
@@ -172,65 +278,107 @@
       <!-- Sekme 3: Google AI Pro Web Oturumu -->
       <section id="tab-google-session" class="settings-subtab-pane" style="display: none;">
         <div style="background: var(--bg-primary); padding: 20px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); max-width: 680px;">
-          <div style="font-weight: 600; font-size: 14px; margin-bottom: 10px; color: var(--accent-cyan);">
+          <div style="font-weight: 600; font-size: 14px; margin-bottom: 10px; color: var(--accent-cyan);" data-i18n="google_session_title">
             Google AI Pro / Gemini Advanced Web Oturumu
           </div>
-          <p style="font-size: 12px; color: var(--text-muted); line-height: 1.6; margin-bottom: 16px;">
+          <p style="font-size: 12px; color: var(--text-muted); line-height: 1.6; margin-bottom: 16px;" data-i18n-html="google_session_desc">
             Herhangi bir API anahtarı gerekmeden, mevcut <strong>Google Hesabınız / Google AI Pro (Gemini Advanced)</strong> aboneliğiniz ile doğrudan giriş yaparak NetCommander AI'ı tam yetkiyle kullanabilirsiniz.
           </p>
           
           <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 16px;">
-            <button id="btn-google-login" class="btn btn-primary">Google Hesabı ile Giriş Yap</button>
-            <button id="btn-google-clear" class="btn btn-danger btn-sm">Oturumu Kapat</button>
+            <button id="btn-google-login" class="btn btn-primary" data-i18n="btn_google_login">Google Hesabı ile Giriş Yap</button>
+            <button id="btn-google-clear" class="btn btn-danger btn-sm" data-i18n="btn_google_logout">Oturumu Kapat</button>
           </div>
 
           <div style="padding: 12px; background: var(--bg-secondary); border-radius: var(--radius-sm); border: 1px solid var(--border-highlight); font-family: var(--font-mono); font-size: 12px;">
-            <span>Oturum Durumu: </span>
+            <span data-i18n="lbl_google_session_status">Oturum Durumu: </span>
             <strong id="google-session-status">Kontrol ediliyor...</strong>
           </div>
         </div>
       </section>
 
-      <!-- Sekme 4: LM Studio -->
-      <section id="tab-lmstudio" class="settings-subtab-pane" style="display: none;">
-        <div style="background: var(--bg-primary); padding: 20px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); max-width: 680px;">
-          <div style="font-weight: 600; font-size: 14px; margin-bottom: 10px; color: var(--accent-cyan);">
-            LM Studio Yerel Sunucu (Local Inference)
+      <!-- Sekme 4: Yerel Modeller (LM Studio & Ollama) -->
+      <section id="tab-local-llms" class="settings-subtab-pane" style="display: none;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 16px;">
+          
+          <!-- LM Studio -->
+          <div style="background: var(--bg-primary); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+            <div style="font-weight: 600; font-size: 14px; margin-bottom: 8px; color: var(--accent-cyan);" data-i18n="lmstudio_title">
+              💻 LM Studio (Local Inference)
+            </div>
+            <p style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 12px;" data-i18n="lmstudio_desc">
+              LM Studio'da yerel sunucuyu başlattıktan sonra bu adresten internetsiz LLM çalıştırabilirsiniz.
+            </p>
+            <div class="form-group">
+              <label class="form-label" data-i18n="lbl_endpoint_url">Sunucu URL Adresi</label>
+              <input type="text" id="cfg-lmstudio-endpoint" class="form-input form-input-mono" value="http://localhost:1234/v1" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="lbl_model">Model Adı / Kimliği</label>
+              <input type="text" id="cfg-lmstudio-model" class="form-input form-input-mono" value="local-model" />
+            </div>
+            <button class="btn btn-sm btn-test-ai" data-provider="lmstudio" data-i18n="btn_test_connection">LM Studio Bağlantısını Test Et</button>
+            <span id="test-result-lmstudio" style="font-size: 11px; margin-left: 8px;"></span>
           </div>
-          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">
-            Bilgisayarınızda veya yerel ağınızda çalışan LM Studio sunucusuna bağlanarak tamamen yerel modeller çalıştırabilirsiniz.
-          </p>
 
-          <div class="form-group">
-            <label class="form-label">LM Studio Sunucu URL Adresi</label>
-            <input type="text" id="cfg-lmstudio-endpoint" class="form-input form-input-mono" value="http://localhost:1234/v1" />
+          <!-- Ollama -->
+          <div style="background: var(--bg-primary); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+            <div style="font-weight: 600; font-size: 14px; margin-bottom: 8px; color: var(--accent-cyan);" data-i18n="ollama_title">
+              🦙 Ollama (Local Inference)
+            </div>
+            <p style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 12px;" data-i18n="ollama_desc">
+              Bilgisayarınızdaki Ollama servisi (`ollama serve`) üzerinden Llama 3.2, Qwen2.5, DeepSeek R1 modellerini çalıştırın.
+            </p>
+            <div class="form-group">
+              <label class="form-label" data-i18n="lbl_endpoint_url">Ollama API URL</label>
+              <input type="text" id="cfg-ollama-endpoint" class="form-input form-input-mono" value="http://localhost:11434" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="lbl_model">Model Adı</label>
+              <input type="text" id="cfg-ollama-model" class="form-input form-input-mono" value="llama3.2" placeholder="Örn: llama3.2, qwen2.5, deepseek-r1:8b" />
+            </div>
+            <button class="btn btn-sm btn-test-ai" data-provider="ollama" data-i18n="btn_test_connection">Ollama Bağlantısını Test Et</button>
+            <span id="test-result-ollama" style="font-size: 11px; margin-left: 8px;"></span>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Model Adı / Kimliği (Opsiyonel)</label>
-            <input type="text" id="cfg-lmstudio-model" class="form-input form-input-mono" value="local-model" placeholder="Örn: llama-3.2, mistral-7b, qwen2.5" />
-          </div>
-
-          <button class="btn btn-sm btn-test-ai" data-provider="lmstudio">LM Studio Bağlantısını Test Et</button>
-          <span id="test-result-lmstudio" style="font-size: 11px; margin-left: 8px;"></span>
         </div>
       </section>
 
-      <!-- Sekme 5: Tercihler & Tema -->
+      <!-- Sekme 5: Tercihler & Dil -->
       <section id="tab-preferences" class="settings-subtab-pane" style="display: none;">
         <div style="background: var(--bg-primary); padding: 20px; border-radius: var(--radius-sm); border: 1px solid var(--border-color); max-width: 600px;">
+          
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_app_language">Uygulama Dili / Language</label>
+            <select id="cfg-app-language" class="form-select">
+              <option value="tr">Türkçe 🇹🇷</option>
+              <option value="en">English 🇬🇧</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" data-i18n="lbl_default_exec_mode">Varsayılan AI Ajanı Çalışma Modu</label>
+            <select id="cfg-default-exec-mode" class="form-select">
+              <option value="autonomous" data-i18n="opt_mode_auto">⚡ Tam Otonom (Zero-Click - Otomatik İcra & Analiz)</option>
+              <option value="copilot" data-i18n="opt_mode_copilot">🛡️ Onaylı Co-Pilot (Kullanıcıdan Komut Onayı Bekler)</option>
+              <option value="advisory" data-i18n="opt_mode_advisory">📖 Yalnızca Danışman (Komut Çalıştırmaz)</option>
+            </select>
+          </div>
+
+          <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 16px 0;" />
+
           <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
             <input type="checkbox" id="cfg-close-to-tray" checked />
-            <label for="cfg-close-to-tray" style="font-size: 12px; cursor: pointer;">Pencere kapatıldığında sistem tepsisinde (Tray) çalışmaya devam et</label>
+            <label for="cfg-close-to-tray" style="font-size: 12px; cursor: pointer;" data-i18n="lbl_close_to_tray">Pencere kapatıldığında sistem tepsisinde (Tray) çalışmaya devam et</label>
           </div>
 
           <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
             <input type="checkbox" id="cfg-minimize-to-tray" checked />
-            <label for="cfg-minimize-to-tray" style="font-size: 12px; cursor: pointer;">Simge durumuna küçültüldüğünde tepsiye gizle</label>
+            <label for="cfg-minimize-to-tray" style="font-size: 12px; cursor: pointer;" data-i18n="lbl_minimize_to_tray">Simge durumuna küçültüldüğünde tepsiye gizle</label>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Terminal Teması</label>
+            <label class="form-label" data-i18n="lbl_terminal_theme">Terminal Teması</label>
             <select id="cfg-terminal-theme" class="form-select">
               <option value="retro-dark">Retro Dark (Modern SysAdmin)</option>
               <option value="retro-amber">Retro Amber CRT</option>
@@ -239,7 +387,7 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Terminal Yazı Boyutu</label>
+            <label class="form-label" data-i18n="lbl_terminal_font_size">Terminal Yazı Boyutu</label>
             <input type="number" id="cfg-terminal-fontsize" class="form-input" value="13" min="10" max="24" />
           </div>
         </div>
@@ -250,14 +398,14 @@
         <div style="background: var(--bg-primary); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <div>
-              <strong style="font-size: 13px; color: var(--accent-cyan);">Sistem Hata Ayıklama Günlüğü (debug.log)</strong>
-              <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);">Konum: logs/debug.log</div>
+              <strong style="font-size: 13px; color: var(--accent-cyan);" data-i18n="logs_title">Sistem Hata Ayıklama Günlüğü (debug.log)</strong>
+              <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);" data-i18n="logs_location">Konum: logs/debug.log</div>
             </div>
             <div style="display: flex; gap: 6px;">
-              <button id="btn-refresh-logs" class="btn btn-sm">🔄 Yenile</button>
-              <button id="btn-copy-logs" class="btn btn-sm">📋 Kopyala</button>
-              <button id="btn-open-log-folder" class="btn btn-sm">📁 Klasörü Aç</button>
-              <button id="btn-clear-logs" class="btn btn-danger btn-sm">🗑️ Temizle</button>
+              <button id="btn-refresh-logs" class="btn btn-sm" data-i18n="btn_refresh_logs">🔄 Yenile</button>
+              <button id="btn-copy-logs" class="btn btn-sm" data-i18n="btn_copy_logs">📋 Kopyala</button>
+              <button id="btn-open-log-folder" class="btn btn-sm" data-i18n="btn_open_log_folder">📁 Klasörü Aç</button>
+              <button id="btn-clear-logs" class="btn btn-danger btn-sm" data-i18n="btn_clear_logs">🗑️ Temizle</button>
             </div>
           </div>
           <pre id="debug-log-console" style="height: 380px; background: #04070d; color: #67e8f9; border: 1px solid #1e293b; padding: 12px; font-family: var(--font-mono); font-size: 11px; line-height: 1.4; overflow-y: scroll; border-radius: var(--radius-sm); user-select: text; white-space: pre-wrap; word-break: break-all;">Loglar yükleniyor...</pre>
@@ -268,7 +416,7 @@
 
     <!-- Alt Kaydet Butonu -->
     <footer class="settings-footer-bar">
-      <button id="btn-save-settings" class="btn btn-success" style="padding: 8px 18px; font-size: 13px;">Ayarları Kaydet</button>
+      <button id="btn-save-settings" class="btn btn-success" style="padding: 8px 18px; font-size: 13px;" data-i18n="btn_save_all_settings">Ayarları Kaydet</button>
       <span id="settings-save-feedback" style="font-size: 12px; color: var(--accent-emerald);"></span>
     </footer>
   </div>
@@ -277,38 +425,38 @@
   <div id="modal-device-dialog" class="modal-overlay">
     <div class="modal-box">
       <div class="modal-header">
-        <span id="dialog-device-title">Yeni Cihaz Bağlantısı</span>
+        <span id="dialog-device-title" data-i18n="dialog_new_device">Yeni Cihaz Bağlantısı</span>
         <button class="btn btn-sm btn-close-device-dialog">&times;</button>
       </div>
       <div class="modal-body">
         <input type="hidden" id="dev-form-id" />
         
         <div class="form-group">
-          <label class="form-label">Cihaz / Bağlantı Adı</label>
-          <input type="text" id="dev-form-name" class="form-input" placeholder="Örn: Ev OpenWrt Router" required />
+          <label class="form-label" data-i18n="lbl_device_name">Cihaz / Bağlantı Adı</label>
+          <input type="text" id="dev-form-name" class="form-input" placeholder="Örn: Ev OpenWrt Router" data-i18n-placeholder="ph_device_name" required />
         </div>
 
         <div style="display: flex; gap: 10px;">
           <div class="form-group" style="flex: 2;">
-            <label class="form-label">IP Adresi / Hostname</label>
+            <label class="form-label" data-i18n="lbl_ip_host">IP Adresi / Hostname</label>
             <input type="text" id="dev-form-host" class="form-input form-input-mono" placeholder="192.168.1.1" required />
           </div>
           <div class="form-group" style="flex: 1;">
-            <label class="form-label">Port</label>
+            <label class="form-label" data-i18n="lbl_port">Port</label>
             <input type="number" id="dev-form-port" class="form-input form-input-mono" value="22" required />
           </div>
         </div>
 
         <div style="display: flex; gap: 10px;">
           <div class="form-group" style="flex: 1;">
-            <label class="form-label">Protokol</label>
+            <label class="form-label" data-i18n="lbl_protocol">Protokol</label>
             <select id="dev-form-protocol" class="form-select">
               <option value="ssh">SSH (Port 22)</option>
               <option value="telnet">Telnet (Port 23)</option>
             </select>
           </div>
           <div class="form-group" style="flex: 1;">
-            <label class="form-label">Cihaz Kategorisi</label>
+            <label class="form-label" data-i18n="lbl_category">Cihaz Kategorisi</label>
             <select id="dev-form-category" class="form-select">
               <option value="openwrt">OpenWrt Router</option>
               <option value="raspberrypi">Raspberry Pi</option>
@@ -319,36 +467,37 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Kullanıcı Adı</label>
+          <label class="form-label" data-i18n="lbl_username">Kullanıcı Adı</label>
           <input type="text" id="dev-form-username" class="form-input form-input-mono" value="root" required />
         </div>
 
         <div class="form-group">
-          <label class="form-label">Kimlik Doğrulama Türü</label>
+          <label class="form-label" data-i18n="lbl_auth_type">Kimlik Doğrulama Türü</label>
           <select id="dev-form-auth-type" class="form-select">
-            <option value="password">Şifre (Password)</option>
-            <option value="privateKey">SSH Private Key</option>
-            <option value="none">Şifresiz</option>
+            <option value="password" data-i18n="opt_auth_password">Şifre (Password)</option>
+            <option value="privateKey" data-i18n="opt_auth_key">SSH Private Key</option>
+            <option value="none" data-i18n="opt_auth_none">Şifresiz</option>
           </select>
         </div>
 
         <div id="dev-auth-password-block" class="form-group">
-          <label class="form-label">Şifre</label>
+          <label class="form-label" data-i18n="lbl_password">Şifre</label>
           <input type="password" id="dev-form-password" class="form-input form-input-mono" />
         </div>
 
         <div id="dev-auth-key-block" class="form-group" style="display: none;">
-          <label class="form-label">SSH Private Key</label>
+          <label class="form-label" data-i18n="lbl_private_key">SSH Private Key</label>
           <textarea id="dev-form-private-key" class="form-textarea form-input-mono" rows="3" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----..."></textarea>
         </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-close-device-dialog">İptal</button>
-        <button id="btn-save-device-submit" class="btn btn-primary">Kaydet</button>
+        <button class="btn btn-close-device-dialog" data-i18n="btn_cancel">İptal</button>
+        <button id="btn-save-device-submit" class="btn btn-primary" data-i18n="btn_save">Kaydet</button>
       </div>
     </div>
   </div>
 
+  <script src="js/i18n.js"></script>
   <script src="js/settings_standalone.js"></script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NetCommander AI - Dosya Gezgini (SFTP / Shell)</title>
+  <title data-i18n="files_window_title">NetCommander AI - Dosya Gezgini (SFTP / Shell)</title>
   <link rel="stylesheet" href="css/retro_theme.css">
   <link rel="stylesheet" href="css/components.css">
   <style>
@@ -29,12 +29,12 @@
     <!-- Explorer Toolbar -->
     <header class="explorer-toolbar">
       <div style="display: flex; align-items: center; gap: 8px; margin-right: 12px;">
-        <span style="font-weight: 700; color: var(--accent-cyan);">📁 SFTP GEZGİNİ</span>
+        <span style="font-weight: 700; color: var(--accent-cyan);" data-i18n="files_header_title">📁 SFTP GEZGİNİ</span>
         <span id="files-active-device-badge" class="brand-badge">Bağlantı Aranıyor...</span>
       </div>
 
-      <button id="btn-sftp-up" class="btn btn-sm" title="Üst Dizine Çık">⬆️ Üst Dizin</button>
-      <button id="btn-sftp-refresh" class="btn btn-sm" title="Yenile">🔄 Yenile</button>
+      <button id="btn-sftp-up" class="btn btn-sm">⬆️ Üst Dizin</button>
+      <button id="btn-sftp-refresh" class="btn btn-sm" data-i18n="btn_files_refresh">🔄 Yenile</button>
       
       <div class="explorer-address-bar">
         <span style="color: var(--text-dim); margin-right: 6px; font-family: var(--font-mono);">📁</span>
@@ -42,8 +42,8 @@
       </div>
 
       <button id="btn-sftp-go" class="btn btn-sm">Git</button>
-      <button id="btn-sftp-upload" class="btn btn-primary btn-sm">📤 Dosya Yükle</button>
-      <button id="btn-sftp-mkdir" class="btn btn-sm">📁 Yeni Klasör</button>
+      <button id="btn-sftp-upload" class="btn btn-primary btn-sm" data-i18n="btn_files_upload">📤 Dosya Yükle</button>
+      <button id="btn-sftp-mkdir" class="btn btn-sm" data-i18n="btn_files_new_folder">📁 Yeni Klasör</button>
       <button id="btn-sftp-newfile" class="btn btn-sm">📄 Yeni Dosya</button>
     </header>
 
@@ -52,7 +52,7 @@
       <!-- Sol: Klasör Ağacı -->
       <aside class="explorer-tree-pane">
         <div class="tree-section-title">Hızlı Dizinler</div>
-        <button class="tree-item-btn quick-path-btn" data-path="/"><span>💾</span> Kök Dizin (/)</button>
+        <button class="tree-item-btn quick-path-btn" data-path="/"><span>💾</span> / (Root)</button>
         <button class="tree-item-btn quick-path-btn" data-path="/etc"><span>⚙️</span> /etc</button>
         <button class="tree-item-btn quick-path-btn" data-path="/etc/config"><span>📡</span> /etc/config (OpenWrt)</button>
         <button class="tree-item-btn quick-path-btn" data-path="/root"><span>👑</span> /root</button>
@@ -67,16 +67,16 @@
         <table class="files-table">
           <thead>
             <tr>
-              <th style="width: 45%;">Ad</th>
-              <th style="width: 15%;">Boyut</th>
-              <th style="width: 15%;">İzinler</th>
-              <th style="width: 15%;">Değiştirilme</th>
-              <th style="width: 10%;">İşlemler</th>
+              <th style="width: 45%;" data-i18n="col_name">Ad</th>
+              <th style="width: 15%;" data-i18n="col_size">Boyut</th>
+              <th style="width: 15%;" data-i18n="col_permissions">İzinler</th>
+              <th style="width: 15%;" data-i18n="col_modified">Değiştirilme</th>
+              <th style="width: 10%;" data-i18n="col_actions">İşlemler</th>
             </tr>
           </thead>
           <tbody id="sftp-files-tbody">
             <tr>
-              <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 28px;">
+              <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 28px;" data-i18n="msg_dir_loading">
                 Dizin listeleniyor...
               </td>
             </tr>
@@ -98,12 +98,13 @@
         <textarea id="remote-file-editor-text" class="form-textarea form-input-mono" style="height: 440px; font-size: 12px; resize: vertical;"></textarea>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-close-editor">Kapat</button>
-        <button id="btn-save-remote-file" class="btn btn-success">Kaydet & Cihaza Gönder</button>
+        <button class="btn btn-close-editor" data-i18n="btn_editor_close">Kapat</button>
+        <button id="btn-save-remote-file" class="btn btn-success" data-i18n="btn_editor_save">Kaydet & Cihaza Gönder</button>
       </div>
     </div>
   </div>
 
+  <script src="js/i18n.js"></script>
   <script src="js/files_standalone.js"></script>
 </body>
 </html>

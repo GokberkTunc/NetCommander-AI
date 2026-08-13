@@ -1,4 +1,4 @@
-// Standalone File Explorer Controller
+// Standalone File Explorer Controller with Complete i18n
 class FilesStandaloneController {
   constructor() {
     this.currentPath = '/';
@@ -6,6 +6,13 @@ class FilesStandaloneController {
     this.pathInput = document.getElementById('sftp-current-path');
     this.deviceBadge = document.getElementById('files-active-device-badge');
 
+    this.init();
+  }
+
+  async init() {
+    if (window.i18n) {
+      await window.i18n.init();
+    }
     this.bindEvents();
     this.checkActiveDeviceAndLoad();
   }
@@ -40,28 +47,29 @@ class FilesStandaloneController {
 
     // New folder
     document.getElementById('btn-sftp-mkdir')?.addEventListener('click', async () => {
-      const name = prompt('Yeni Klasör Adı:');
+      const promptText = window.i18n ? window.i18n.t('prompt_new_folder') : 'Yeni klasör adı:';
+      const name = prompt(promptText);
       if (name) {
         const newPath = (this.currentPath.endsWith('/') ? this.currentPath : this.currentPath + '/') + name;
         try {
           await window.api.createSFTPDir(newPath);
           this.loadDirectory(this.currentPath);
         } catch (err) {
-          alert('Klasör oluşturulamadı: ' + err.message);
+          alert('Error: ' + err.message);
         }
       }
     });
 
     // New file
     document.getElementById('btn-sftp-newfile')?.addEventListener('click', async () => {
-      const name = prompt('Yeni Dosya Adı:');
+      const name = prompt(window.i18n && window.i18n.currentLang === 'en' ? 'New file name:' : 'Yeni Dosya Adı:');
       if (name) {
         const newPath = (this.currentPath.endsWith('/') ? this.currentPath : this.currentPath + '/') + name;
         try {
           await window.api.writeSFTPFile(newPath, '');
           this.loadDirectory(this.currentPath);
         } catch (err) {
-          alert('Dosya oluşturulamadı: ' + err.message);
+          alert('Error: ' + err.message);
         }
       }
     });
@@ -74,7 +82,7 @@ class FilesStandaloneController {
           this.loadDirectory(this.currentPath);
         }
       } catch (err) {
-        alert('Yükleme hatası: ' + err.message);
+        alert('Upload Error: ' + err.message);
       }
     });
 
@@ -93,11 +101,11 @@ class FilesStandaloneController {
 
       try {
         await window.api.writeSFTPFile(filePath, content);
-        alert('Dosya başarıyla kaydedildi.');
+        alert(window.i18n ? window.i18n.t('msg_file_saved') : '✓ Dosya başarıyla kaydedildi.');
         document.getElementById('modal-file-editor')?.classList.remove('active');
         this.loadDirectory(this.currentPath);
       } catch (err) {
-        alert('Kaydetme hatası: ' + err.message);
+        alert('Save Error: ' + err.message);
       }
     });
   }
@@ -112,12 +120,12 @@ class FilesStandaloneController {
         this.loadDirectory('/');
       } else {
         if (this.deviceBadge) {
-          this.deviceBadge.textContent = 'Bağlı Cihaz Yok';
+          this.deviceBadge.textContent = window.i18n ? window.i18n.t('no_connection') : 'Bağlı Cihaz Yok';
         }
         this.tableBody.innerHTML = `
           <tr>
             <td colspan="5" style="text-align: center; color: var(--accent-amber); padding: 36px;">
-              ⚠️ Aktif bir cihaz bağlantısı bulunamadı. Lütfen ana ekrandan veya Ayarlar'dan bir cihaza bağlanın.
+              ⚠️ ${window.i18n && window.i18n.currentLang === 'en' ? 'No active device connection found. Please connect to a device on the main screen or in Settings.' : 'Aktif bir cihaz bağlantısı bulunamadı. Lütfen ana ekrandan veya Ayarlar\'dan bir cihaza bağlanın.'}
             </td>
           </tr>
         `;
@@ -131,7 +139,7 @@ class FilesStandaloneController {
     this.tableBody.innerHTML = `
       <tr>
         <td colspan="5" style="text-align: center; color: var(--accent-cyan); padding: 24px;">
-          ⏳ ${dirPath} dizini listeleniyor...
+          ⏳ ${dirPath} ${window.i18n ? window.i18n.t('msg_dir_loading') : 'dizini listeleniyor...'}
         </td>
       </tr>
     `;
@@ -145,7 +153,7 @@ class FilesStandaloneController {
       this.tableBody.innerHTML = `
         <tr>
           <td colspan="5" style="text-align: center; color: var(--accent-rose); padding: 24px;">
-            ❌ Dizin listelenemedi: ${err.message}
+            ❌ ${err.message}
           </td>
         </tr>
       `;
@@ -167,7 +175,7 @@ class FilesStandaloneController {
       this.tableBody.innerHTML = `
         <tr>
           <td colspan="5" style="text-align: center; color: var(--text-dim); padding: 24px;">
-            (Boş Klasör)
+            (${window.i18n && window.i18n.currentLang === 'en' ? 'Empty Directory' : 'Boş Klasör'})
           </td>
         </tr>
       `;
@@ -180,6 +188,8 @@ class FilesStandaloneController {
       if (!a.isDirectory && b.isDirectory) return 1;
       return a.name.localeCompare(b.name);
     });
+
+    const isEn = window.i18n && window.i18n.currentLang === 'en';
 
     for (const item of sorted) {
       const tr = document.createElement('tr');
@@ -199,13 +209,13 @@ class FilesStandaloneController {
           ${item.permissions}
         </td>
         <td style="font-size: 11px; color: var(--text-dim);">
-          ${new Date(item.modifyTime).toLocaleString('tr-TR')}
+          ${new Date(item.modifyTime).toLocaleString(isEn ? 'en-US' : 'tr-TR')}
         </td>
         <td>
           <div style="display: flex; gap: 4px;">
-            ${!item.isDirectory ? `<button class="btn btn-sm btn-edit-file" title="Düzenle">✏️</button>` : ''}
-            ${!item.isDirectory ? `<button class="btn btn-sm btn-dl-file" title="İndir">⬇️</button>` : ''}
-            <button class="btn btn-sm btn-danger btn-del-file" title="Sil">🗑️</button>
+            ${!item.isDirectory ? `<button class="btn btn-sm btn-edit-file" title="${isEn ? 'Edit' : 'Düzenle'}">✏️</button>` : ''}
+            ${!item.isDirectory ? `<button class="btn btn-sm btn-dl-file" title="${isEn ? 'Download' : 'İndir'}">⬇️</button>` : ''}
+            <button class="btn btn-sm btn-danger btn-del-file" title="${isEn ? 'Delete' : 'Sil'}">🗑️</button>
           </div>
         </td>
       `;
@@ -230,18 +240,19 @@ class FilesStandaloneController {
         try {
           await window.api.downloadSFTP(filePath);
         } catch (err) {
-          alert('İndirme hatası: ' + err.message);
+          alert('Download Error: ' + err.message);
         }
       });
 
       tr.querySelector('.btn-del-file')?.addEventListener('click', async () => {
         const filePath = (this.currentPath.endsWith('/') ? this.currentPath : this.currentPath + '/') + item.name;
-        if (confirm(`'${item.name}' silinecek. Emin misiniz?`)) {
+        const confirmMsg = window.i18n ? window.i18n.t('confirm_delete_file', { name: item.name }) : `'${item.name}' silinecek. Emin misiniz?`;
+        if (confirm(confirmMsg)) {
           try {
             await window.api.deleteSFTP(filePath, item.isDirectory);
             this.loadDirectory(this.currentPath);
           } catch (err) {
-            alert('Silme hatası: ' + err.message);
+            alert('Delete Error: ' + err.message);
           }
         }
       });
@@ -258,8 +269,9 @@ class FilesStandaloneController {
     const titleEl = document.getElementById('editor-file-title');
     const editorText = document.getElementById('remote-file-editor-text');
 
-    if (titleEl) titleEl.textContent = `Dosya Düzenleyici: ${item.name} (${filePath})`;
-    if (editorText) editorText.value = 'Dosya indiriliyor ve okunuyor...';
+    const isEn = window.i18n && window.i18n.currentLang === 'en';
+    if (titleEl) titleEl.textContent = `${isEn ? 'File Editor' : 'Dosya Düzenleyici'}: ${item.name} (${filePath})`;
+    if (editorText) editorText.value = isEn ? 'Downloading and reading remote file...' : 'Dosya indiriliyor ve okunuyor...';
 
     modal?.classList.add('active');
 
@@ -267,7 +279,7 @@ class FilesStandaloneController {
       const content = await window.api.readSFTPFile(filePath);
       if (editorText) editorText.value = content;
     } catch (err) {
-      if (editorText) editorText.value = 'Dosya okunamadı: ' + err.message;
+      if (editorText) editorText.value = 'Read Error: ' + err.message;
     }
   }
 
@@ -280,6 +292,4 @@ class FilesStandaloneController {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  window.filesCtrl = new FilesStandaloneController();
-});
+window.filesStandalone = new FilesStandaloneController();

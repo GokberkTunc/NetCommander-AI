@@ -36,6 +36,20 @@ class AppController {
       window.api.openFilesWindow();
     });
 
+    // Language Switcher (TR / EN)
+    document.getElementById('btn-lang-switch')?.addEventListener('click', () => {
+      window.i18n.toggleLanguage();
+      this.updateHeaderAndFooter();
+    });
+
+    // Execution Mode Select
+    const modeSelect = document.getElementById('execution-mode-select');
+    modeSelect?.addEventListener('change', async (e) => {
+      const mode = e.target.value;
+      window.managementTab?.setExecutionMode(mode);
+      await window.api.saveSettings({ executionMode: mode });
+    });
+
     // Header Disconnect Button
     this.disconnectBtn?.addEventListener('click', async () => {
       await window.api.disconnect(this.activeSessionId);
@@ -124,9 +138,15 @@ class AppController {
 
   async initTheme() {
     try {
+      await window.i18n?.init();
       const settings = await window.api.getSettings();
       if (settings?.terminal?.theme) {
         document.body.setAttribute('data-theme', settings.terminal.theme);
+      }
+      if (settings?.executionMode) {
+        const modeSelect = document.getElementById('execution-mode-select');
+        if (modeSelect) modeSelect.value = settings.executionMode;
+        window.managementTab?.setExecutionMode(settings.executionMode);
       }
     } catch {}
   }
@@ -149,7 +169,9 @@ class AppController {
     const session = this.sessions.get(sessionId);
     const termTitle = document.getElementById('terminal-device-title');
     if (termTitle) {
-      termTitle.textContent = session ? `[Canlı Terminal - ${session.name} (${session.host})]` : '[Canlı Terminal - Boşta]';
+      termTitle.textContent = session
+        ? (window.i18n ? window.i18n.t('terminal_connected', { name: session.name, host: session.host }) : `[Canlı Terminal - ${session.name} (${session.host})]`)
+        : (window.i18n ? window.i18n.t('terminal_idle') : '[Canlı Terminal - Boşta]');
     }
 
     // Switch terminal stream buffer
@@ -183,7 +205,7 @@ class AppController {
     if (this.sessions.size === 0) {
       const defaultTab = document.createElement('div');
       defaultTab.className = 'device-tab-item active';
-      defaultTab.innerHTML = `<span>🖥️</span> <span>Bağlantı Yok</span>`;
+      defaultTab.innerHTML = `<span>🖥️</span> <span>${window.i18n ? window.i18n.t('no_connection') : 'Bağlantı Yok'}</span>`;
       this.sessionTabsContainer.appendChild(defaultTab);
       return;
     }
@@ -195,7 +217,7 @@ class AppController {
       tab.innerHTML = `
         <span>🖥️</span>
         <span class="device-tab-title">${session.name}</span>
-        <span class="device-tab-close" title="Bağlantıyı Kapat">&times;</span>
+        <span class="device-tab-close" title="${window.i18n ? window.i18n.t('btn_disconnect') : 'Kapat'}">&times;</span>
       `;
 
       tab.addEventListener('click', (e) => {
@@ -247,15 +269,16 @@ class AppController {
       this.statusDot.className = 'status-indicator connected';
       this.statusText.textContent = `${device.name} (${device.host}:${device.port})`;
       this.disconnectBtn.style.display = 'inline-flex';
+      this.disconnectBtn.textContent = window.i18n ? window.i18n.t('btn_disconnect') : 'Kes';
     } else {
       this.statusDot.className = 'status-indicator';
-      this.statusText.textContent = 'SSH / Telnet Boşta';
+      this.statusText.textContent = window.i18n ? window.i18n.t('status_idle') : 'SSH / Telnet Boşta';
       this.disconnectBtn.style.display = 'none';
     }
 
     const footSession = document.getElementById('footer-session-title');
     const footProto = document.getElementById('footer-protocol');
-    if (footSession) footSession.textContent = device ? device.name : 'Bağlantı Yok';
+    if (footSession) footSession.textContent = device ? device.name : (window.i18n ? window.i18n.t('no_connection') : 'Bağlantı Yok');
     if (footProto) footProto.textContent = device ? device.protocol.toUpperCase() : '-';
   }
 }

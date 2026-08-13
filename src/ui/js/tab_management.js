@@ -1,4 +1,4 @@
-// Tab 1: Ana Yönetim & AI Odası Controller with Fully Autonomous Loop & Per-Device Isolated Chat
+// Tab 1: Ana Yönetim & AI Odası Controller with Execution Modes (Autonomous, Co-Pilot, Advisory) & i18n
 class ManagementTabController {
   constructor() {
     this.chatBox = document.getElementById('ai-chat-box');
@@ -6,30 +6,32 @@ class ManagementTabController {
     this.sendBtn = document.getElementById('btn-ai-send');
     this.scanBtn = document.getElementById('btn-scan-device');
     this.clearChatBtn = document.getElementById('btn-clear-chat');
-    this.activeAiBadge = document.getElementById('active-ai-badge');
     
     this.activeDeviceId = null;
     this.activeDevice = null;
+    this.executionMode = 'autonomous'; // 'autonomous' | 'copilot' | 'advisory'
 
     this.bindEvents();
-    this.updateActiveAIBadge();
   }
 
-  async updateActiveAIBadge() {
-    try {
-      const settings = await window.api.getSettings();
-      const provider = settings.activeProvider;
-      if (this.activeAiBadge) {
-        if (provider === 'google_web_session') {
-          this.activeAiBadge.textContent = 'Google AI Pro (Web)';
-        } else if (provider === 'lmstudio') {
-          this.activeAiBadge.textContent = `LM Studio (${settings.providers.lmstudio?.model || 'local'})`;
-        } else {
-          const model = settings.providers[provider]?.model || provider;
-          this.activeAiBadge.textContent = `${provider.toUpperCase()} (${model})`;
-        }
+  setExecutionMode(mode) {
+    this.executionMode = mode;
+    const badge = document.getElementById('active-mode-badge');
+    if (badge) {
+      if (mode === 'autonomous') {
+        badge.style.background = '#064e3b';
+        badge.style.color = '#34d399';
+        badge.textContent = window.i18n ? window.i18n.t('badge_autonomous') : '⚡ Otonom Ajan';
+      } else if (mode === 'copilot') {
+        badge.style.background = '#1e3a8a';
+        badge.style.color = '#60a5fa';
+        badge.textContent = window.i18n ? window.i18n.t('badge_copilot') : '🛡️ Co-Pilot';
+      } else {
+        badge.style.background = '#374151';
+        badge.style.color = '#9ca3af';
+        badge.textContent = '📖 Danışman';
       }
-    } catch {}
+    }
   }
 
   bindEvents() {
@@ -46,7 +48,7 @@ class ManagementTabController {
         await window.api.clearChatHistory(this.activeDeviceId);
       }
       this.chatBox.innerHTML = '';
-      this.addAssistantMessage('Sohbet geçmişi temizlendi. Cihazınız hakkında bir soru veya görev yazabilirsiniz.');
+      this.addAssistantMessage(window.i18n ? window.i18n.t('welcome_message') : 'Sohbet temizlendi.');
     });
 
     // Quick Action Chips
@@ -74,7 +76,7 @@ class ManagementTabController {
 
     if (!device) {
       this.addAssistantMessage(
-        `Merhaba! SSH veya Telnet üzerinden bağlandığınız cihazı <strong>tam otonom olarak</strong> yönetebilirim. Başlamak için üstteki <strong>"+ Yeni Bağlantı"</strong> butonuna tıklayın.`
+        window.i18n ? window.i18n.t('welcome_message') : 'Merhaba! Başlamak için üstteki "+ Yeni Bağlantı" butonuna tıklayın.'
       );
       return;
     }
@@ -91,7 +93,7 @@ class ManagementTabController {
         }
       } else {
         this.addAssistantMessage(
-          `🟢 **${device.name}** (${device.host}:${device.port} - ${device.protocol.toUpperCase()}) oturumundasınız.\n\nİstediğiniz görevi yazdığınızda komutlar **otomatik olarak terminale gönderilecek**, çıktıları arka planda **otomatik analiz edilip** sade bir Türkçe özet olarak sunulacaktır.`
+          `🟢 **${device.name}** (${device.host}:${device.port} - ${device.protocol.toUpperCase()}) oturumundasınız.\n\nİstediğiniz görevi yazarak cihazınızı yönetebilirsiniz.`
         );
       }
     } catch (err) {
@@ -100,8 +102,7 @@ class ManagementTabController {
   }
 
   /**
-   * Multi-Step Self-Correcting Autonomous Loop:
-   * Supports sequential command executions (e.g. initial command fails -> Gemini self-corrects with alternative command -> auto-runs -> analyzes -> outputs final summary)
+   * Handle sending message with Autonomous vs. Co-Pilot branching
    */
   async handleSendMessage(customPrompt = null) {
     const text = (customPrompt || this.inputField.value).trim();
@@ -112,13 +113,27 @@ class ManagementTabController {
       this.addUserMessage(text);
     }
 
-    const loadingId = this.addLoadingMessage('NetCommander AI düşünüyor ve komutu hazırlıyor...');
+    const loadingId = this.addLoadingMessage(
+      window.i18n ? window.i18n.t('ai_thinking') : 'NetCommander AI düşünüyor ve komutu hazırlıyor...'
+    );
 
     try {
       let currentResponse = await window.api.sendAIMessage(text);
       this.removeLoadingMessage(loadingId);
       this.renderAssistantMessage(currentResponse);
 
+      // Branch based on Execution Mode
+      if (this.executionMode === 'advisory') {
+        // Advisory mode does not execute commands
+        return;
+      }
+
+      if (this.executionMode === 'copilot') {
+        // Co-Pilot mode waits for user to click Run on the card
+        return;
+      }
+
+      // FULL AUTONOMOUS (Zero-Click) Loop
       let iteration = 0;
       let prevCmd = '';
       let prevOutput = '';
@@ -130,33 +145,27 @@ class ManagementTabController {
       ) {
         const suggestion = currentResponse.commandSuggestion;
         if (suggestion.isDangerous) {
-          // Desteklenen güvenli sınır: Tehlikeli komutlarda kullanıcı onayı beklenir
           break;
         }
 
         iteration++;
         const cmd = suggestion.command;
 
-        // Sonsuz döngü koruması: Eğer model aynı komutu aynı boş çıktı ile üst üste çalıştırıyorsa kır
         if (cmd === prevCmd && prevOutput === '') {
-          console.warn('Aynı komut boş çıktı ile tekrarlandı, döngü sonlandırılıyor.');
           break;
         }
         prevCmd = cmd;
 
         const loopLoadingId = this.addLoadingMessage(
-          `⚡ [Adım ${iteration}] \`${cmd.substring(0, 45)}...\` çalıştırıldı, terminal çıktısı analiz ediliyor...`
+          `⚡ [Adım ${iteration}] \`${cmd.substring(0, 45)}...\` ${window.i18n ? window.i18n.t('step_indicator') : 'çalıştırıldı, terminal çıktısı analiz ediliyor...'}`
         );
 
-        // Terminal çıktısının PTY üzerinden akması için bekleme
         await new Promise((r) => setTimeout(r, 1800));
 
         let lastOutput = '';
         try {
           lastOutput = await window.api.getLastTerminalOutput(40);
-        } catch (e) {
-          console.warn('Terminal output read error:', e);
-        }
+        } catch (e) {}
 
         prevOutput = lastOutput ? lastOutput.trim() : '';
 
@@ -165,7 +174,10 @@ class ManagementTabController {
           break;
         }
 
-        const feedbackPrompt = `Az önce çalıştırılan \`${cmd}\` komutunun terminal çıktısı aşağıdadır:\n\n\`\`\`\n${lastOutput.trim()}\n\`\`\`\nEğer bu çıktı hedeflenen bilgiyi sağlamaya yettiyse veya işlem tamamlandıysa sonucu net, sade ve anlaşılır bir Türkçe özetle açıkla. Eğer komut hata verdiyse (command not found, permission denied vb.) veya ilave bir teşhis/işlem komutu çalıştırmak gerekiyorsa yeni komutu [KOMUT]...[/KOMUT] etiketleri içinde öner.`;
+        const isEnglish = window.i18n && window.i18n.currentLang === 'en';
+        const feedbackPrompt = isEnglish
+          ? `The terminal output for \`${cmd}\` is shown below:\n\n\`\`\`\n${lastOutput.trim()}\n\`\`\`\nIf this output is sufficient to fulfill the user's request, provide a clear, concise summary. If the command errored or additional diagnostic commands are needed, suggest the next command wrapped in [KOMUT]...[/KOMUT] tags.`
+          : `Az önce çalıştırılan \`${cmd}\` komutunun terminal çıktısı aşağıdadır:\n\n\`\`\`\n${lastOutput.trim()}\n\`\`\`\nEğer bu çıktı hedeflenen bilgiyi sağlamaya yettiyse veya işlem tamamlandıysa sonucu net, sade ve anlaşılır bir Türkçe özetle açıkla. Eğer komut hata verdiyse veya ilave bir komut çalıştırmak gerekiyorsa yeni komutu [KOMUT]...[/KOMUT] etiketleri içinde öner.`;
 
         try {
           currentResponse = await window.api.sendAIMessage(feedbackPrompt);
@@ -173,7 +185,6 @@ class ManagementTabController {
           this.renderAssistantMessage(currentResponse);
         } catch (feedbackErr) {
           this.removeLoadingMessage(loopLoadingId);
-          console.warn('Otomatik geri besleme hatası:', feedbackErr);
           break;
         }
       }
@@ -190,7 +201,7 @@ class ManagementTabController {
 
     modal?.classList.add('active');
     if (progressBar) progressBar.style.width = '10%';
-    if (progressStep) progressStep.textContent = 'Bağlantı kontrol ediliyor...';
+    if (progressStep) progressStep.textContent = window.i18n ? window.i18n.t('scan_checking') : 'Bağlantı kontrol ediliyor...';
 
     const unbind = window.api.onScanProgress(({ step, percent }) => {
       if (progressStep) progressStep.textContent = step;
@@ -203,30 +214,17 @@ class ManagementTabController {
       setTimeout(() => {
         modal?.classList.remove('active');
         
-        let report = `🔍 **Kapsamlı Cihaz Tanıma & Teşhis Raporu Tamamlandı!**\n\n`;
+        let report = `🔍 **${window.i18n ? window.i18n.t('scan_completed_title') : 'Kapsamlı Cihaz Tanıma & Teşhis Raporu Tamamlandı!'}**\n\n`;
         report += `**Sistem Özeti:** ${blueprint.summary}\n\n`;
-        report += `- **İşletim Sistemi / Dağıtım:** ${blueprint.distro} (${blueprint.architecture})\n`;
-        report += `- **Kernel / Çekirdek:** \`${blueprint.kernel}\`\n`;
+        report += `- **OS / Distro:** ${blueprint.distro} (${blueprint.architecture})\n`;
+        report += `- **Kernel:** \`${blueprint.kernel}\`\n`;
         report += `- **Hostname:** \`${blueprint.hostname}\`\n`;
-        report += `- **İşlemci (CPU):** ${blueprint.cpuModel} (${blueprint.cpuCores} Çekirdek)\n`;
-        report += `- **RAM Durumu:** Toplam ${blueprint.ramTotalMb} MB (Kullanılabilir Boş: ${blueprint.ramFreeMb} MB)\n`;
+        report += `- **CPU:** ${blueprint.cpuModel} (${blueprint.cpuCores} Cores)\n`;
+        report += `- **RAM:** Total ${blueprint.ramTotalMb} MB (Free: ${blueprint.ramFreeMb} MB)\n`;
         
         if (blueprint.networkInterfaces && blueprint.networkInterfaces.length > 0) {
-          report += `- **Ağ Arayüzleri:** ${blueprint.networkInterfaces.map(n => `\`${n.name}\` (${n.state}${n.ip4 ? ` - ${n.ip4}` : ''})`).join(', ')}\n`;
+          report += `- **Interfaces:** ${blueprint.networkInterfaces.map(n => `\`${n.name}\` (${n.status}${n.ip4 ? ` - ${n.ip4}` : ''})`).join(', ')}\n`;
         }
-
-        if (blueprint.disks && blueprint.disks.length > 0) {
-          report += `- **Disk / Flash Bölümleri:**\n`;
-          for (const d of blueprint.disks.slice(0, 5)) {
-            report += `  - \`${d.mount}\`: ${d.used}/${d.size} (%${d.usePercent})\n`;
-          }
-        }
-
-        if (blueprint.openWrtConfigs?.wireless) {
-          report += `- **WiFi & Radyo:** Kablosuz radyo ve bağlı istemci taraması hafızaya alındı.\n`;
-        }
-
-        report += `\n*Tüm bu derinlemesine teşhis verileri cihaz hafızasına işlendi. AI artık cihazınızı %100 tanıyor.*`;
 
         this.addAssistantMessage(report);
         window.app?.updateHeaderAndFooter();
@@ -244,7 +242,7 @@ class ManagementTabController {
 
     const header = document.createElement('div');
     header.className = 'chat-bubble-header';
-    header.innerHTML = `<span>👤 Siz</span>`;
+    header.innerHTML = `<span>${window.i18n ? window.i18n.t('you') : '👤 Siz'}</span>`;
 
     const bubble = document.createElement('div');
     bubble.className = 'chat-bubble chat-bubble-user';
@@ -262,7 +260,7 @@ class ManagementTabController {
 
     const header = document.createElement('div');
     header.className = 'chat-bubble-header';
-    header.innerHTML = `<span>🤖 NetCommander AI</span> <span class="brand-badge" style="background: #064e3b; color: #34d399; font-size: 9px; margin-left: 4px;">⚡ Otonom Ajan</span>`;
+    header.innerHTML = `<span>${window.i18n ? window.i18n.t('assistant') : '🤖 NetCommander AI'}</span>`;
 
     const bubble = document.createElement('div');
     bubble.className = 'chat-bubble chat-bubble-assistant';
@@ -280,7 +278,7 @@ class ManagementTabController {
 
     const header = document.createElement('div');
     header.className = 'chat-bubble-header';
-    header.innerHTML = `<span>🤖 NetCommander AI</span> <span class="brand-badge" style="background: #064e3b; color: #34d399; font-size: 9px; margin-left: 4px;">⚡ Otonom Ajan</span>`;
+    header.innerHTML = `<span>${window.i18n ? window.i18n.t('assistant') : '🤖 NetCommander AI'}</span>`;
 
     const bubble = document.createElement('div');
     bubble.className = 'chat-bubble chat-bubble-assistant';
@@ -301,16 +299,17 @@ class ManagementTabController {
     const card = document.createElement('div');
     card.className = 'command-card';
 
-    const isAutoExecuted = suggestion.status === 'executed';
+    const isAutoExecuted = this.executionMode === 'autonomous' && suggestion.status === 'executed';
 
     const header = document.createElement('div');
     header.className = 'command-card-header';
     header.innerHTML = `
       <span><strong>Komut:</strong> ${suggestion.description || 'Önerilen sistem komutu'}</span>
       <div style="display: flex; gap: 6px; align-items: center;">
-        ${isAutoExecuted ? `<span class="brand-badge" style="background: #064e3b; color: #34d399; font-weight: bold;">⚡ Otomatik Çalıştırıldı</span>` : ''}
+        ${isAutoExecuted ? `<span class="brand-badge" style="background: #064e3b; color: #34d399; font-weight: bold;">${window.i18n ? window.i18n.t('badge_auto_executed') : '⚡ Otomatik Çalıştırıldı'}</span>` : ''}
+        ${!isAutoExecuted && this.executionMode === 'copilot' ? `<span class="brand-badge" style="background: #1e3a8a; color: #60a5fa; font-weight: bold;">${window.i18n ? window.i18n.t('badge_awaiting_approval') : '⏳ Onay Bekliyor'}</span>` : ''}
         <span class="risk-badge ${suggestion.isDangerous ? 'risk-dangerous' : 'risk-safe'}">
-          ${suggestion.isDangerous ? '⚠️ TEHLİKELİ / ONAY GEREKLİ' : '✅ GÜVENLİ KOMUT'}
+          ${suggestion.isDangerous ? (window.i18n ? window.i18n.t('risk_dangerous') : '⚠️ TEHLİKELİ / ONAY GEREKLİ') : (window.i18n ? window.i18n.t('risk_safe') : '✅ GÜVENLİ KOMUT')}
         </span>
       </div>
     `;
@@ -324,23 +323,38 @@ class ManagementTabController {
 
     const copyBtn = document.createElement('button');
     copyBtn.className = 'btn btn-sm';
-    copyBtn.textContent = '📋 Kopyala';
+    copyBtn.textContent = window.i18n ? window.i18n.t('btn_copy') : '📋 Kopyala';
     copyBtn.onclick = () => {
       navigator.clipboard.writeText(suggestion.command);
-      copyBtn.textContent = 'Kopyalandı!';
-      setTimeout(() => (copyBtn.textContent = '📋 Kopyala'), 1500);
+      copyBtn.textContent = window.i18n ? window.i18n.t('btn_copied') : 'Kopyalandı!';
+      setTimeout(() => (copyBtn.textContent = window.i18n ? window.i18n.t('btn_copy') : '📋 Kopyala'), 1500);
     };
 
     const runBtn = document.createElement('button');
     runBtn.className = suggestion.isDangerous ? 'btn btn-danger btn-sm' : 'btn btn-success btn-sm';
-    runBtn.textContent = isAutoExecuted ? '✓ Terminale Gönderildi' : '▶️ Terminalde Çalıştır';
+    runBtn.textContent = isAutoExecuted ? (window.i18n ? window.i18n.t('btn_sent_to_term') : '✓ Terminale Gönderildi') : (window.i18n ? window.i18n.t('btn_run_terminal') : '▶️ Terminalde Çalıştır');
     if (isAutoExecuted) runBtn.disabled = true;
 
     runBtn.onclick = async () => {
       try {
         await window.api.executeCommand(suggestion.command);
         runBtn.disabled = true;
-        runBtn.textContent = '✓ Gönderildi';
+        runBtn.textContent = window.i18n ? window.i18n.t('btn_sent_to_term') : '✓ Gönderildi';
+
+        // In Co-Pilot mode, after running, optionally trigger feedback loop
+        if (this.executionMode === 'copilot') {
+          await new Promise((r) => setTimeout(r, 1800));
+          const lastOutput = await window.api.getLastTerminalOutput(40);
+          if (lastOutput && lastOutput.trim().length > 0) {
+            const isEnglish = window.i18n && window.i18n.currentLang === 'en';
+            const feedbackPrompt = isEnglish
+              ? `The user approved and executed \`${suggestion.command}\`. Terminal output:\n\n\`\`\`\n${lastOutput.trim()}\n\`\`\`\nPlease analyze this output.`
+              : `Kullanıcı \`${suggestion.command}\` komutunu onaylayıp çalıştırdı. Terminal çıktısı:\n\n\`\`\`\n${lastOutput.trim()}\n\`\`\`\nLütfen bu çıktıyı inceleyip sonucu Türkçe olarak özetle.`;
+            
+            const nextResp = await window.api.sendAIMessage(feedbackPrompt);
+            this.renderAssistantMessage(nextResp);
+          }
+        }
       } catch (err) {
         alert('Komut çalıştırma hatası: ' + err.message);
       }

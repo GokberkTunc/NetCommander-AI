@@ -8,7 +8,7 @@ import { AgentBrain } from '../ai/agent_brain.js';
 import { AIProviders } from '../ai/ai_providers.js';
 import { WebSessionManager } from '../ai/web_session.js';
 import { Logger } from '../storage/logger.js';
-import { DeviceConnectionConfig, AppSettings, AIProviderConfig, ChatMessage } from '../storage/models.js';
+import { DeviceConnectionConfig, AppSettings, AIProviderConfig, ChatMessage, AIProviderType } from '../storage/models.js';
 
 let mainWindow: BrowserWindow | null = null;
 let settingsWindow: BrowserWindow | null = null;
@@ -374,9 +374,10 @@ app.whenReady().then(() => {
     return true;
   });
 
-  ipcMain.handle('ai:testConnection', async (_, config: AIProviderConfig) => {
-    logger.info('AI', `Bağlantı testi: ${config.provider}`);
-    return await AIProviders.testConnection(config);
+  ipcMain.handle('ai:testConnection', async (_, config: AIProviderConfig, provider?: AIProviderType) => {
+    const prov = (provider || (config as any).provider || 'google_web_session') as AIProviderType;
+    logger.info('AI', `Bağlantı testi: ${prov}`);
+    return await AIProviders.testConnection(prov, config);
   });
 
   ipcMain.handle('ai:openGoogleLogin', async () => {

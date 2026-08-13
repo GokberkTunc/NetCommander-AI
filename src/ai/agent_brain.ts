@@ -119,35 +119,35 @@ export class AgentBrain {
   public async processUserMessage(userText: string): Promise<ChatMessage> {
     const logger = Logger.getInstance();
     const settings = this.dbStore.getSettings();
-    const activeProviderName = settings.activeProvider;
-    const providerConfig = settings.providers[activeProviderName];
-
-    if (!providerConfig || (!providerConfig.apiKey && activeProviderName !== 'google_web_session' && activeProviderName !== 'lmstudio')) {
-      throw new Error(`AI Sağlayıcısı (${activeProviderName}) için API anahtarı girilmemiş. Lütfen Ayarlar sekmesinden API anahtarınızı tanımlayın.`);
-    }
+    const activeProviderName = settings.activeProvider || 'google_web_session';
+    const providerConfig = (settings.providers as any)?.[activeProviderName] || {};
+    const executionMode = settings.executionMode || 'autonomous';
 
     const activeDevice = this.protocolManager.getActiveConfig();
     const deviceId = activeDevice ? activeDevice.id : 'global';
     const terminalContext = this.terminalObserver.getTerminalContext(40);
 
     const systemPrompt = this.memoryManager.buildContextPrompt(activeDevice, terminalContext);
-    const rawHistory = this.dbStore.getChatHistory(deviceId);
-    const formattedHistory = rawHistory.map((m) => ({ role: m.role, content: m.content }));
 
-    const rawResponse = await AIProviders.generateResponse(
+    const rawResponse = await AIProviders.execute(
+      activeProviderName,
       providerConfig,
       systemPrompt,
-      userText,
-      formattedHistory
+      userText
     );
 
-    const suggested = this.extractSuggestedCommand(rawResponse);
+    const suggested = this.extractSuggestedCommand(rawResponse.text);
     let executionStatus: 'pending' | 'executed' | 'approved' | 'rejected' = 'pending';
 
-    logger.info('AgentBrain', `AI Yanıtı alındı. Komut algılandı mı: ${suggested ? suggested.command : 'Hayır'}`);
+    logger.info('AgentBrain', `AI Yanıtı alındı. Komut: ${suggested ? suggested.command : 'Yok'} | Mod: ${executionMode}`);
 
-    // Auto-execution logic (Auto-Pilot for safe commands)
-    if (suggested && !suggested.isDangerous && providerConfig.autoApproveSafeCommands && this.protocolManager.isConnected()) {
+    // Auto-execution in Autonomous Mode
+    if (
+      suggested &&
+      !suggested.isDangerous &&
+      executionMode === 'autonomous' &&
+      this.protocolManager.isConnected()
+    ) {
       logger.info('AgentBrain', `[Auto-Pilot] Güvenli komut otomatik olarak terminale gönderiliyor: ${suggested.command}`);
       try {
         await this.executeCommand(suggested.command);
@@ -159,15 +159,13 @@ export class AgentBrain {
 
     const assistantMsg: ChatMessage = {
       id: 'msg_' + Date.now(),
-      role: 'assistant',
-      content: rawResponse,
-      timestamp: new Date().toISOString(),
       deviceId,
+      role: 'assistant',
+      content: rawResponse.text,
+      timestamp: new Date().toISOString(),
       commandSuggestion: suggested
         ? {
-            command: suggested.command,
-            description: suggested.description,
-            isDangerous: suggested.isDangerous,
+            ...suggested,
             status: executionStatus,
           }
         : undefined,

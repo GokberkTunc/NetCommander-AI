@@ -1,29 +1,32 @@
-// Standalone Settings & Device Manager Window Controller
+// Standalone Settings & Device Manager Controller for NetCommander AI v1.1 with Complete i18n
 class SettingsStandaloneController {
   constructor() {
+    this.currentSettings = null;
+    this.init();
+  }
+
+  async init() {
+    if (window.i18n) {
+      await window.i18n.init();
+    }
     this.initSubtabs();
     this.bindEvents();
-    this.loadAllSettings();
-    this.loadDevices();
-    this.checkGoogleSession();
+    await this.loadAllData();
   }
 
   initSubtabs() {
     document.querySelectorAll('.settings-nav-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
-        const targetId = btn.getAttribute('data-subtab');
-        
+        const subtabId = btn.getAttribute('data-subtab');
         document.querySelectorAll('.settings-nav-btn').forEach((b) => b.classList.remove('active'));
+        document.querySelectorAll('.settings-subtab-pane').forEach((p) => (p.style.display = 'none'));
+
         btn.classList.add('active');
+        const targetPane = document.getElementById(subtabId);
+        if (targetPane) targetPane.style.display = 'block';
 
-        document.querySelectorAll('.settings-subtab-pane').forEach((pane) => {
-          pane.style.display = pane.id === targetId ? 'block' : 'none';
-        });
-
-        if (targetId === 'tab-debug-logs') {
+        if (subtabId === 'tab-debug-logs') {
           this.loadLogs();
-        } else if (targetId === 'tab-devices') {
-          this.loadDevices();
         }
       });
     });
@@ -31,69 +34,22 @@ class SettingsStandaloneController {
 
   bindEvents() {
     // Save Settings Button
-    document.getElementById('btn-save-settings')?.addEventListener('click', () => {
-      this.saveSettings();
+    document.getElementById('btn-save-settings')?.addEventListener('click', () => this.saveAllSettings());
+
+    // Language selector change in Preferences -> Live UI translation
+    document.getElementById('cfg-app-language')?.addEventListener('change', async (e) => {
+      const newLang = e.target.value;
+      if (window.i18n) {
+        await window.i18n.setLanguage(newLang);
+        this.loadDevices();
+        this.checkGoogleSession();
+      }
     });
 
-    // Test AI Buttons
-    document.querySelectorAll('.btn-test-ai').forEach((btn) => {
-      btn.addEventListener('click', async () => {
-        const provider = btn.getAttribute('data-provider');
-        const feedbackEl = document.getElementById(`test-result-${provider}`);
-        if (feedbackEl) {
-          feedbackEl.style.color = 'var(--accent-amber)';
-          feedbackEl.textContent = 'Test ediliyor...';
-        }
-
-        try {
-          let testCfg = {};
-          if (provider === 'gemini') {
-            testCfg = {
-              apiKey: document.getElementById('cfg-gemini-key').value,
-              model: document.getElementById('cfg-gemini-model').value,
-            };
-          } else if (provider === 'openai') {
-            testCfg = {
-              apiKey: document.getElementById('cfg-openai-key').value,
-              model: document.getElementById('cfg-openai-model').value,
-            };
-          } else if (provider === 'anthropic') {
-            testCfg = {
-              apiKey: document.getElementById('cfg-anthropic-key').value,
-              model: document.getElementById('cfg-anthropic-model').value,
-            };
-          } else if (provider === 'lmstudio') {
-            testCfg = {
-              endpoint: document.getElementById('cfg-lmstudio-endpoint').value,
-              model: document.getElementById('cfg-lmstudio-model').value,
-            };
-          }
-
-          const res = await window.api.testAIProvider(provider, testCfg);
-          if (feedbackEl) {
-            if (res.success) {
-              feedbackEl.style.color = 'var(--accent-emerald)';
-              feedbackEl.textContent = `✓ Başarılı: ${res.response.substring(0, 30)}...`;
-            } else {
-              feedbackEl.style.color = 'var(--accent-rose)';
-              feedbackEl.textContent = `✗ Hata: ${res.error}`;
-            }
-          }
-        } catch (err) {
-          if (feedbackEl) {
-            feedbackEl.style.color = 'var(--accent-rose)';
-            feedbackEl.textContent = `✗ Hata: ${err.message}`;
-          }
-        }
-      });
-    });
-
-    // Google Web Session Login & Clear
+    // Google Session Buttons
     document.getElementById('btn-google-login')?.addEventListener('click', async () => {
-      const statusEl = document.getElementById('google-session-status');
-      if (statusEl) statusEl.textContent = 'Giriş penceresi açıldı, bekleniyor...';
-      const status = await window.api.openGoogleLogin();
-      this.updateGoogleStatusUI(status);
+      await window.api.openGoogleLogin();
+      this.checkGoogleSession();
     });
 
     document.getElementById('btn-google-clear')?.addEventListener('click', async () => {
@@ -101,233 +57,292 @@ class SettingsStandaloneController {
       this.checkGoogleSession();
     });
 
-    // Debug logs buttons
+    // Test AI Buttons
+    document.querySelectorAll('.btn-test-ai').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const provider = btn.getAttribute('data-provider');
+        const resultSpan = document.getElementById(`test-result-${provider}`);
+        if (resultSpan) {
+          resultSpan.textContent = window.i18n ? window.i18n.t('testing_connection') : '⏳ Test ediliyor...';
+          resultSpan.style.color = 'var(--text-muted)';
+        }
+
+        try {
+          const config = this.getProviderConfigFromUI(provider);
+          const res = await window.api.testAIConnection(config, provider);
+          if (resultSpan) {
+            resultSpan.textContent = res.success ? `✓ ${res.message}` : `✗ ${res.message}`;
+            resultSpan.style.color = res.success ? 'var(--accent-emerald)' : 'var(--accent-rose)';
+          }
+        } catch (err) {
+          if (resultSpan) {
+            resultSpan.textContent = `✗ Hata: ${err.message}`;
+            resultSpan.style.color = 'var(--accent-rose)';
+          }
+        }
+      });
+    });
+
+    // Log Buttons
     document.getElementById('btn-refresh-logs')?.addEventListener('click', () => this.loadLogs());
-    document.getElementById('btn-copy-logs')?.addEventListener('click', () => {
-      const consoleEl = document.getElementById('debug-log-console');
-      if (consoleEl) {
-        navigator.clipboard.writeText(consoleEl.textContent);
-        alert('Loglar panoya kopyalandı.');
-      }
-    });
-    document.getElementById('btn-open-log-folder')?.addEventListener('click', () => {
-      window.api.openLogFolder();
-    });
     document.getElementById('btn-clear-logs')?.addEventListener('click', async () => {
       await window.api.clearLogs();
       this.loadLogs();
     });
-
-    // Device dialog events
-    document.getElementById('btn-add-device-dialog')?.addEventListener('click', () => {
-      this.openDeviceDialog();
+    document.getElementById('btn-copy-logs')?.addEventListener('click', () => {
+      const text = document.getElementById('debug-log-console')?.textContent || '';
+      navigator.clipboard.writeText(text);
+      alert(window.i18n ? window.i18n.t('logs_copied_alert') : 'Loglar panoya kopyalandı.');
+    });
+    document.getElementById('btn-open-log-folder')?.addEventListener('click', () => {
+      window.api.openLogFolder();
     });
 
-    document.querySelectorAll('.btn-close-device-dialog').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        document.getElementById('modal-device-dialog')?.classList.remove('active');
-      });
+    // Device Manager Modal Events
+    document.getElementById('btn-add-device-dialog')?.addEventListener('click', () => this.openDeviceDialog());
+    document.querySelectorAll('.btn-close-device-dialog').forEach((b) => {
+      b.addEventListener('click', () => this.closeDeviceDialog());
     });
-
     document.getElementById('dev-form-auth-type')?.addEventListener('change', (e) => {
-      const val = e.target.value;
+      const type = e.target.value;
       const passBlock = document.getElementById('dev-auth-password-block');
       const keyBlock = document.getElementById('dev-auth-key-block');
-      if (passBlock) passBlock.style.display = val === 'password' ? 'block' : 'none';
-      if (keyBlock) keyBlock.style.display = val === 'privateKey' ? 'block' : 'none';
+      if (passBlock) passBlock.style.display = type === 'password' ? 'block' : 'none';
+      if (keyBlock) keyBlock.style.display = type === 'privateKey' ? 'block' : 'none';
     });
-
-    document.getElementById('btn-save-device-submit')?.addEventListener('click', () => {
-      this.handleSaveDeviceSubmit();
-    });
+    document.getElementById('btn-save-device-submit')?.addEventListener('click', () => this.saveDeviceFromDialog());
   }
 
-  async loadAllSettings() {
+  async loadAllData() {
+    await this.loadSettings();
+    await this.loadDevices();
+    this.checkGoogleSession();
+  }
+
+  async loadSettings() {
     try {
-      const settings = await window.api.getSettings();
-      if (!settings) return;
+      this.currentSettings = await window.api.getSettings();
+      const s = this.currentSettings || {};
+      const provs = s.providers || {};
 
-      document.getElementById('settings-active-provider').value = settings.activeProvider || 'google_web_session';
+      // Active Provider & Preferences
+      const activeProv = document.getElementById('settings-active-provider');
+      if (activeProv && s.activeProvider) activeProv.value = s.activeProvider;
 
-      if (settings.providers?.gemini) {
-        document.getElementById('cfg-gemini-key').value = settings.providers.gemini.apiKey || '';
-        document.getElementById('cfg-gemini-model').value = settings.providers.gemini.model || 'gemini-2.5-flash';
-      }
+      const langSelect = document.getElementById('cfg-app-language');
+      if (langSelect && s.language) langSelect.value = s.language;
 
-      if (settings.providers?.openai) {
-        document.getElementById('cfg-openai-key').value = settings.providers.openai.apiKey || '';
-        document.getElementById('cfg-openai-model').value = settings.providers.openai.model || 'gpt-4o-mini';
-      }
+      const execSelect = document.getElementById('cfg-default-exec-mode');
+      if (execSelect && s.executionMode) execSelect.value = s.executionMode;
 
-      if (settings.providers?.anthropic) {
-        document.getElementById('cfg-anthropic-key').value = settings.providers.anthropic.apiKey || '';
-        document.getElementById('cfg-anthropic-model').value = settings.providers.anthropic.model || 'claude-3-5-sonnet-20241022';
-      }
+      // LM Studio & Ollama
+      if (provs.lmstudio?.endpoint) document.getElementById('cfg-lmstudio-endpoint').value = provs.lmstudio.endpoint;
+      if (provs.lmstudio?.model) document.getElementById('cfg-lmstudio-model').value = provs.lmstudio.model;
 
-      if (settings.providers?.lmstudio) {
-        document.getElementById('cfg-lmstudio-endpoint').value = settings.providers.lmstudio.endpoint || 'http://localhost:1234/v1';
-        document.getElementById('cfg-lmstudio-model').value = settings.providers.lmstudio.model || 'local-model';
-      }
+      if (provs.ollama?.endpoint) document.getElementById('cfg-ollama-endpoint').value = provs.ollama.endpoint;
+      if (provs.ollama?.model) document.getElementById('cfg-ollama-model').value = provs.ollama.model;
 
-      if (settings.tray) {
-        document.getElementById('cfg-close-to-tray').checked = settings.tray.closeToTray ?? true;
-        document.getElementById('cfg-minimize-to-tray').checked = settings.tray.minimizeToTray ?? true;
-      }
+      // Cloud APIs
+      if (provs.deepseek?.apiKey) document.getElementById('cfg-deepseek-key').value = provs.deepseek.apiKey;
+      if (provs.deepseek?.model) document.getElementById('cfg-deepseek-model').value = provs.deepseek.model;
 
-      if (settings.terminal) {
-        document.getElementById('cfg-terminal-theme').value = settings.terminal.theme || 'retro-dark';
-        document.getElementById('cfg-terminal-fontsize').value = settings.terminal.fontSize || 13;
-      }
+      if (provs.groq?.apiKey) document.getElementById('cfg-groq-key').value = provs.groq.apiKey;
+      if (provs.groq?.model) document.getElementById('cfg-groq-model').value = provs.groq.model;
+
+      if (provs.openrouter?.apiKey) document.getElementById('cfg-openrouter-key').value = provs.openrouter.apiKey;
+      if (provs.openrouter?.model) document.getElementById('cfg-openrouter-model').value = provs.openrouter.model;
+
+      if (provs.gemini?.apiKey) document.getElementById('cfg-gemini-key').value = provs.gemini.apiKey;
+      if (provs.gemini?.model) document.getElementById('cfg-gemini-model').value = provs.gemini.model;
+
+      if (provs.openai?.apiKey) document.getElementById('cfg-openai-key').value = provs.openai.apiKey;
+      if (provs.openai?.model) document.getElementById('cfg-openai-model').value = provs.openai.model;
+
+      if (provs.anthropic?.apiKey) document.getElementById('cfg-anthropic-key').value = provs.anthropic.apiKey;
+      if (provs.anthropic?.model) document.getElementById('cfg-anthropic-model').value = provs.anthropic.model;
+
+      if (provs.mistral?.apiKey) document.getElementById('cfg-mistral-key').value = provs.mistral.apiKey;
+      if (provs.mistral?.model) document.getElementById('cfg-mistral-model').value = provs.mistral.model;
+
+      if (provs.custom_openai?.endpoint) document.getElementById('cfg-custom-endpoint').value = provs.custom_openai.endpoint;
+      if (provs.custom_openai?.model) document.getElementById('cfg-custom-model').value = provs.custom_openai.model;
+      if (provs.custom_openai?.apiKey) document.getElementById('cfg-custom-key').value = provs.custom_openai.apiKey;
+
+      // Terminal Settings
+      if (s.terminal?.theme) document.getElementById('cfg-terminal-theme').value = s.terminal.theme;
+      if (s.terminal?.fontSize) document.getElementById('cfg-terminal-fontsize').value = s.terminal.fontSize;
     } catch (err) {
-      console.error('Ayarlar yüklenemedi:', err);
+      console.error('Settings load error:', err);
     }
   }
 
-  async saveSettings() {
-    const feedback = document.getElementById('settings-save-feedback');
-    if (feedback) feedback.textContent = 'Kaydediliyor...';
+  getProviderConfigFromUI(provider) {
+    switch (provider) {
+      case 'lmstudio':
+        return {
+          endpoint: document.getElementById('cfg-lmstudio-endpoint')?.value,
+          model: document.getElementById('cfg-lmstudio-model')?.value,
+        };
+      case 'ollama':
+        return {
+          endpoint: document.getElementById('cfg-ollama-endpoint')?.value,
+          model: document.getElementById('cfg-ollama-model')?.value,
+        };
+      case 'deepseek':
+        return {
+          apiKey: document.getElementById('cfg-deepseek-key')?.value,
+          model: document.getElementById('cfg-deepseek-model')?.value,
+        };
+      case 'groq':
+        return {
+          apiKey: document.getElementById('cfg-groq-key')?.value,
+          model: document.getElementById('cfg-groq-model')?.value,
+        };
+      case 'openrouter':
+        return {
+          apiKey: document.getElementById('cfg-openrouter-key')?.value,
+          model: document.getElementById('cfg-openrouter-model')?.value,
+        };
+      case 'gemini':
+        return {
+          apiKey: document.getElementById('cfg-gemini-key')?.value,
+          model: document.getElementById('cfg-gemini-model')?.value,
+        };
+      case 'openai':
+        return {
+          apiKey: document.getElementById('cfg-openai-key')?.value,
+          model: document.getElementById('cfg-openai-model')?.value,
+        };
+      case 'anthropic':
+        return {
+          apiKey: document.getElementById('cfg-anthropic-key')?.value,
+          model: document.getElementById('cfg-anthropic-model')?.value,
+        };
+      case 'mistral':
+        return {
+          apiKey: document.getElementById('cfg-mistral-key')?.value,
+          model: document.getElementById('cfg-mistral-model')?.value,
+        };
+      case 'custom_openai':
+        return {
+          endpoint: document.getElementById('cfg-custom-endpoint')?.value,
+          model: document.getElementById('cfg-custom-model')?.value,
+          apiKey: document.getElementById('cfg-custom-key')?.value,
+        };
+      default:
+        return {};
+    }
+  }
 
-    const updatedSettings = {
-      activeProvider: document.getElementById('settings-active-provider').value,
+  async saveAllSettings() {
+    const feedback = document.getElementById('settings-save-feedback');
+    if (feedback) feedback.textContent = '...';
+
+    const newSettings = {
+      activeProvider: document.getElementById('settings-active-provider')?.value,
+      language: document.getElementById('cfg-app-language')?.value,
+      executionMode: document.getElementById('cfg-default-exec-mode')?.value,
       providers: {
-        gemini: {
-          apiKey: document.getElementById('cfg-gemini-key').value.trim(),
-          model: document.getElementById('cfg-gemini-model').value,
-        },
-        openai: {
-          apiKey: document.getElementById('cfg-openai-key').value.trim(),
-          model: document.getElementById('cfg-openai-model').value,
-        },
-        anthropic: {
-          apiKey: document.getElementById('cfg-anthropic-key').value.trim(),
-          model: document.getElementById('cfg-anthropic-model').value,
-        },
-        lmstudio: {
-          endpoint: document.getElementById('cfg-lmstudio-endpoint').value.trim(),
-          model: document.getElementById('cfg-lmstudio-model').value.trim(),
-        },
+        google_web_session: { model: 'gemini-pro' },
+        lmstudio: this.getProviderConfigFromUI('lmstudio'),
+        ollama: this.getProviderConfigFromUI('ollama'),
+        deepseek: this.getProviderConfigFromUI('deepseek'),
+        groq: this.getProviderConfigFromUI('groq'),
+        openrouter: this.getProviderConfigFromUI('openrouter'),
+        gemini: this.getProviderConfigFromUI('gemini'),
+        openai: this.getProviderConfigFromUI('openai'),
+        anthropic: this.getProviderConfigFromUI('anthropic'),
+        mistral: this.getProviderConfigFromUI('mistral'),
+        custom_openai: this.getProviderConfigFromUI('custom_openai'),
       },
       tray: {
-        closeToTray: document.getElementById('cfg-close-to-tray').checked,
-        minimizeToTray: document.getElementById('cfg-minimize-to-tray').checked,
-        startMinimized: false,
+        closeToTray: document.getElementById('cfg-close-to-tray')?.checked ?? true,
+        minimizeToTray: document.getElementById('cfg-minimize-to-tray')?.checked ?? true,
       },
       terminal: {
-        theme: document.getElementById('cfg-terminal-theme').value,
-        fontSize: parseInt(document.getElementById('cfg-terminal-fontsize').value, 10) || 13,
+        theme: document.getElementById('cfg-terminal-theme')?.value || 'retro-dark',
+        fontSize: parseInt(document.getElementById('cfg-terminal-fontsize')?.value || '13', 10),
       },
     };
 
     try {
-      await window.api.saveSettings(updatedSettings);
-      if (feedback) feedback.textContent = '✓ Ayarlar başarıyla kaydedildi.';
-      setTimeout(() => {
-        if (feedback) feedback.textContent = '';
-      }, 2500);
+      await window.api.saveSettings(newSettings);
+      if (feedback) {
+        feedback.textContent = window.i18n ? window.i18n.t('settings_saved_success') : '✓ Ayarlar başarıyla kaydedildi.';
+        setTimeout(() => (feedback.textContent = ''), 2500);
+      }
     } catch (err) {
       if (feedback) {
-        feedback.style.color = 'var(--accent-rose)';
-        feedback.textContent = '✗ Kaydetme hatası: ' + err.message;
+        feedback.textContent = '❌ ' + err.message;
       }
     }
   }
 
   async checkGoogleSession() {
-    const status = await window.api.getGoogleSessionStatus();
-    this.updateGoogleStatusUI(status);
-  }
-
-  updateGoogleStatusUI(status) {
     const statusEl = document.getElementById('google-session-status');
     if (!statusEl) return;
-    if (status.isLoggedIn) {
-      statusEl.style.color = 'var(--accent-emerald)';
-      statusEl.textContent = `🟢 Oturum Açık (${status.cookiesCount} çerez aktif)`;
-    } else {
-      statusEl.style.color = 'var(--accent-rose)';
-      statusEl.textContent = '🔴 Oturum Kapalı. Lütfen giriş yapın.';
-    }
-  }
-
-  async loadLogs() {
-    const consoleEl = document.getElementById('debug-log-console');
-    if (!consoleEl) return;
     try {
-      const logs = await window.api.getLogs();
-      consoleEl.textContent = logs || 'Log kaydı bulunamadı.';
-      consoleEl.scrollTop = consoleEl.scrollHeight;
-    } catch (err) {
-      consoleEl.textContent = 'Loglar yüklenemedi: ' + err.message;
+      const status = await window.api.getGoogleSessionStatus();
+      if (status.isLoggedIn) {
+        statusEl.textContent = window.i18n
+          ? window.i18n.t('status_google_logged_in', { count: status.cookiesCount })
+          : `🟢 Giriş Yapıldı (${status.cookiesCount} çerez)`;
+        statusEl.style.color = 'var(--accent-emerald)';
+      } else {
+        statusEl.textContent = window.i18n
+          ? window.i18n.t('status_google_logged_out')
+          : '🔴 Oturum Kapalı / Giriş Yapılmadı';
+        statusEl.style.color = 'var(--accent-rose)';
+      }
+    } catch {
+      statusEl.textContent = '-';
     }
   }
 
-  // --- Devices Subtab ---
   async loadDevices() {
     const grid = document.getElementById('devices-grid');
     if (!grid) return;
+    grid.innerHTML = `<div style="color: var(--text-dim);">${window.i18n ? window.i18n.t('devices_loading') : 'Cihazlar yükleniyor...'}</div>`;
 
     try {
       const devices = await window.api.getDevices();
       grid.innerHTML = '';
-
       if (!devices || devices.length === 0) {
-        grid.innerHTML = `
-          <div style="grid-column: 1/-1; text-align: center; padding: 28px; color: var(--text-muted);">
-            Kayıtlı ağ cihazı bulunamadı. Cihaz eklemek için yukarıdaki <strong>"Yeni Cihaz Ekle"</strong> butonunu kullanın.
-          </div>
-        `;
+        grid.innerHTML = `<div style="color: var(--text-muted); font-size: 13px;">${window.i18n ? window.i18n.t('devices_empty') : 'Henüz kayıtlı cihaz yok.'}</div>`;
         return;
       }
 
-      for (const dev of devices) {
+      devices.forEach((dev) => {
         const card = document.createElement('div');
         card.className = 'device-card';
-
         card.innerHTML = `
           <div class="device-card-header">
             <div>
-              <strong style="font-size: 13px;">${dev.name}</strong>
-              <span class="brand-badge" style="margin-left: 6px;">${dev.protocol.toUpperCase()}</span>
+              <div class="device-card-title">${dev.name}</div>
+              <div class="device-card-meta">${dev.host}:${dev.port} • ${dev.protocol.toUpperCase()} • ${dev.username}</div>
             </div>
-            <span style="font-size: 11px; color: var(--text-dim); font-family: var(--font-mono);">${dev.host}:${dev.port}</span>
+            <span class="brand-badge">${dev.category || 'Device'}</span>
           </div>
-
-          <div style="font-size: 11px; color: var(--text-muted);">
-            <span>Kullanıcı: <strong>${dev.username}</strong></span> &bull;
-            <span>Kategori: <strong>${dev.category || 'Genel'}</strong></span>
-          </div>
-
-          <div class="device-card-actions">
-            <button class="btn btn-sm btn-edit-dev" title="Düzenle">✏️</button>
-            <button class="btn btn-sm btn-danger btn-del-dev" title="Sil">🗑️</button>
-            <button class="btn btn-primary btn-sm btn-connect-dev">⚡ Ana Ekranda Bağlan</button>
+          <div style="display: flex; gap: 6px; margin-top: 10px;">
+            <button class="btn btn-primary btn-sm btn-connect-dev">${window.i18n ? window.i18n.t('btn_connect_main') : '⚡ Ana Ekranda Bağlan'}</button>
+            <button class="btn btn-sm btn-edit-dev">${window.i18n ? window.i18n.t('btn_edit') : '✏️ Düzenle'}</button>
+            <button class="btn btn-danger btn-sm btn-del-dev">🗑️</button>
           </div>
         `;
-
-        card.querySelector('.btn-edit-dev')?.addEventListener('click', () => {
-          this.openDeviceDialog(dev);
-        });
-
-        card.querySelector('.btn-del-dev')?.addEventListener('click', async () => {
-          if (confirm(`'${dev.name}' cihazını silmek istediğinizden emin misiniz?`)) {
-            await window.api.deleteDevice(dev.id);
-            this.loadDevices();
-          }
-        });
 
         card.querySelector('.btn-connect-dev')?.addEventListener('click', async () => {
           const connectBtn = card.querySelector('.btn-connect-dev');
           if (connectBtn) {
-            connectBtn.textContent = 'Bağlanıyor...';
+            connectBtn.textContent = window.i18n ? window.i18n.t('btn_connecting') : 'Bağlanıyor...';
             connectBtn.disabled = true;
           }
           try {
             await window.api.connect(dev, 80, 24, dev.id);
             if (connectBtn) {
-              connectBtn.textContent = '✓ Bağlandı (Ana Pencerede Aktif)';
+              connectBtn.textContent = window.i18n ? window.i18n.t('btn_connected_active') : '✓ Bağlandı (Ana Pencerede Aktif)';
               connectBtn.style.background = '#059669';
               setTimeout(() => {
-                connectBtn.textContent = '⚡ Ana Ekranda Bağlan';
+                connectBtn.textContent = window.i18n ? window.i18n.t('btn_connect_main') : '⚡ Ana Ekranda Bağlan';
                 connectBtn.style.background = '';
                 connectBtn.disabled = false;
               }, 3000);
@@ -335,58 +350,61 @@ class SettingsStandaloneController {
           } catch (err) {
             alert('Bağlantı hatası: ' + err.message);
             if (connectBtn) {
-              connectBtn.textContent = '⚡ Ana Ekranda Bağlan';
+              connectBtn.textContent = window.i18n ? window.i18n.t('btn_connect_main') : '⚡ Ana Ekranda Bağlan';
               connectBtn.disabled = false;
             }
           }
         });
 
+        card.querySelector('.btn-edit-dev')?.addEventListener('click', () => this.openDeviceDialog(dev));
+        card.querySelector('.btn-del-dev')?.addEventListener('click', async () => {
+          const confirmMsg = window.i18n ? window.i18n.t('confirm_delete_device', { name: dev.name }) : `'${dev.name}' cihazını silmek istediğinize emin misiniz?`;
+          if (confirm(confirmMsg)) {
+            await window.api.deleteDevice(dev.id);
+            this.loadDevices();
+          }
+        });
+
         grid.appendChild(card);
-      }
+      });
     } catch (err) {
-      grid.innerHTML = `<p style="color: var(--accent-rose);">Cihazlar listelenemedi: ${err.message}</p>`;
+      grid.innerHTML = `<div style="color: var(--accent-rose);">Error: ${err.message}</div>`;
     }
   }
 
-  openDeviceDialog(device = null) {
+  openDeviceDialog(dev = null) {
     const modal = document.getElementById('modal-device-dialog');
-    const titleEl = document.getElementById('dialog-device-title');
+    document.getElementById('dialog-device-title').textContent = dev
+      ? (window.i18n ? window.i18n.t('dialog_edit_device') : 'Cihazı Düzenle')
+      : (window.i18n ? window.i18n.t('dialog_new_device') : 'Yeni Cihaz Bağlantısı');
+    document.getElementById('dev-form-id').value = dev ? dev.id : '';
+    document.getElementById('dev-form-name').value = dev ? dev.name : '';
+    document.getElementById('dev-form-host').value = dev ? dev.host : '';
+    document.getElementById('dev-form-port').value = dev ? dev.port : 22;
+    document.getElementById('dev-form-protocol').value = dev ? dev.protocol : 'ssh';
+    document.getElementById('dev-form-category').value = dev ? dev.category || 'openwrt' : 'openwrt';
+    document.getElementById('dev-form-username').value = dev ? dev.username : 'root';
+    document.getElementById('dev-form-auth-type').value = dev ? dev.authType : 'password';
+    document.getElementById('dev-form-password').value = dev ? dev.password || '' : '';
+    document.getElementById('dev-form-private-key').value = dev ? dev.privateKey || '' : '';
 
-    if (device) {
-      if (titleEl) titleEl.textContent = `Cihazı Düzenle: ${device.name}`;
-      document.getElementById('dev-form-id').value = device.id;
-      document.getElementById('dev-form-name').value = device.name;
-      document.getElementById('dev-form-host').value = device.host;
-      document.getElementById('dev-form-port').value = device.port;
-      document.getElementById('dev-form-protocol').value = device.protocol;
-      document.getElementById('dev-form-category').value = device.category || 'openwrt';
-      document.getElementById('dev-form-username').value = device.username;
-      document.getElementById('dev-form-auth-type').value = device.authType || 'password';
-      document.getElementById('dev-form-password').value = device.password || '';
-      document.getElementById('dev-form-private-key').value = device.privateKey || '';
-    } else {
-      if (titleEl) titleEl.textContent = 'Yeni Cihaz Bağlantısı';
-      document.getElementById('dev-form-id').value = '';
-      document.getElementById('dev-form-name').value = '';
-      document.getElementById('dev-form-host').value = '';
-      document.getElementById('dev-form-port').value = '22';
-      document.getElementById('dev-form-protocol').value = 'ssh';
-      document.getElementById('dev-form-category').value = 'openwrt';
-      document.getElementById('dev-form-username').value = 'root';
-      document.getElementById('dev-form-auth-type').value = 'password';
-      document.getElementById('dev-form-password').value = '';
-      document.getElementById('dev-form-private-key').value = '';
-    }
+    const passBlock = document.getElementById('dev-auth-password-block');
+    const keyBlock = document.getElementById('dev-auth-key-block');
+    if (passBlock) passBlock.style.display = (!dev || dev.authType === 'password') ? 'block' : 'none';
+    if (keyBlock) keyBlock.style.display = (dev && dev.authType === 'privateKey') ? 'block' : 'none';
 
-    document.getElementById('dev-form-auth-type')?.dispatchEvent(new Event('change'));
     modal?.classList.add('active');
   }
 
-  async handleSaveDeviceSubmit() {
-    const id = document.getElementById('dev-form-id').value || 'dev_' + Date.now();
+  closeDeviceDialog() {
+    document.getElementById('modal-device-dialog')?.classList.remove('active');
+  }
+
+  async saveDeviceFromDialog() {
+    const id = document.getElementById('dev-form-id').value;
     const name = document.getElementById('dev-form-name').value.trim();
     const host = document.getElementById('dev-form-host').value.trim();
-    const port = parseInt(document.getElementById('dev-form-port').value, 10) || 22;
+    const port = parseInt(document.getElementById('dev-form-port').value, 10);
     const protocol = document.getElementById('dev-form-protocol').value;
     const category = document.getElementById('dev-form-category').value;
     const username = document.getElementById('dev-form-username').value.trim();
@@ -395,12 +413,12 @@ class SettingsStandaloneController {
     const privateKey = document.getElementById('dev-form-private-key').value;
 
     if (!name || !host || !username) {
-      alert('Lütfen Cihaz Adı, Host/IP ve Kullanıcı Adı alanlarını doldurun.');
+      alert('Lütfen gerekli alanları doldurun / Please fill in all required fields.');
       return;
     }
 
-    const deviceObj = {
-      id,
+    const dev = {
+      id: id || 'dev_' + Date.now(),
       name,
       host,
       port,
@@ -408,21 +426,32 @@ class SettingsStandaloneController {
       category,
       username,
       authType,
-      password: authType === 'password' ? password : undefined,
-      privateKey: authType === 'privateKey' ? privateKey : undefined,
-      tags: [],
+      password,
+      privateKey,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     try {
-      await window.api.saveDevice(deviceObj);
-      document.getElementById('modal-device-dialog')?.classList.remove('active');
+      await window.api.saveDevice(dev);
+      this.closeDeviceDialog();
       this.loadDevices();
     } catch (err) {
-      alert('Cihaz kaydedilemedi: ' + err.message);
+      alert('Error: ' + err.message);
+    }
+  }
+
+  async loadLogs() {
+    const consoleEl = document.getElementById('debug-log-console');
+    if (!consoleEl) return;
+    try {
+      const logs = await window.api.getLogs(300);
+      consoleEl.textContent = logs || (window.i18n ? window.i18n.t('logs_empty') : 'Henüz log kaydı bulunmuyor.');
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+    } catch (err) {
+      consoleEl.textContent = 'Log error: ' + err.message;
     }
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  window.settingsCtrl = new SettingsStandaloneController();
-});
+window.settingsStandalone = new SettingsStandaloneController();

@@ -13,44 +13,75 @@
 
   <div class="app-master-container">
 
-    <!-- ÜST BAŞLIK & CİHAZ SEKME ÇUBUĞU -->
+    <!-- KOMPAKT TEK SATIR ÜST BAŞLIK VE KONTROL ÇUBUĞU -->
     <header class="app-top-header">
+      
+      <!-- Sol Taraf: Marka & Cihaz Sekmeleri -->
       <div class="header-left-zone">
         <div class="header-brand-title">
-          <span>NETCOMMANDER</span>
-          <span class="brand-badge">AI v1.0</span>
+          <span data-i18n="brand_title">NETCOMMANDER</span>
+          <span class="brand-badge" data-i18n="brand_badge">AI v1.1</span>
         </div>
 
         <!-- Cihaz Sekmeleri (Tarayıcı Tarzı Çoklu Oturum) -->
         <div id="device-session-tabs" class="device-tabs-bar">
           <div class="device-tab-item active" data-session-id="default">
             <span>🖥️</span>
-            <span class="device-tab-title">Bağlantı Yok</span>
+            <span class="device-tab-title" data-i18n="no_connection">Bağlantı Yok</span>
           </div>
         </div>
 
-        <button id="btn-header-add-tab" class="btn-add-device-tab" title="Yeni Cihaza Bağlan / Cihaz Yöneticisini Aç">
+        <button id="btn-header-add-tab" class="btn-add-device-tab" data-i18n-title="add_tab_btn" data-i18n="add_tab_btn">
           + Yeni Bağlantı
         </button>
       </div>
 
+      <!-- Sağ Taraf: Durum, Mod Seçici, Hızlı Eylemler, Dosya Gezgini, Dil & Ayarlar -->
       <div class="header-right-zone">
+        
         <!-- Aktif Bağlantı Rozeti -->
         <div class="connection-pill" id="header-connection-pill">
           <span id="header-status-dot" class="status-indicator"></span>
-          <span id="header-status-text">SSH / Telnet Boşta</span>
-          <button id="btn-header-disconnect" class="btn btn-danger btn-sm" style="display: none; padding: 0 4px; font-size: 10px; margin-left: 4px;">
+          <span id="header-status-text" data-i18n="status_idle">SSH / Telnet Boşta</span>
+          <button id="btn-header-disconnect" class="btn btn-danger btn-sm" style="display: none; padding: 0 4px; font-size: 10px; margin-left: 4px;" data-i18n="btn_disconnect">
             Kes
           </button>
         </div>
 
+        <!-- Otonom Döngü Çalışma Modu Seçici -->
+        <div class="mode-select-wrapper">
+          <select id="execution-mode-select" class="form-select mode-dropdown" title="AI Ajanı Çalışma Modu">
+            <option value="autonomous">⚡ Tam Otonom (Zero-Click)</option>
+            <option value="copilot">🛡️ Onaylı (Co-Pilot)</option>
+            <option value="advisory">📖 Yalnızca Danışman</option>
+          </select>
+        </div>
+
+        <!-- Hızlı Eylemler Açılır Menüsü / Kompakt Çipler -->
+        <div class="header-quick-chips">
+          <button class="chip-btn" data-prompt="Cihazın CPU, RAM ve Disk kullanım durumunu detaylı incele." data-i18n="chip_ram_disk">📊 RAM & Disk</button>
+          <button class="chip-btn" data-prompt="Aktif ağ arayüzlerini, IP adreslerini ve routing tablosunu analiz et." data-i18n="chip_net_ip">🌐 Ağ & IP</button>
+          <button class="chip-btn" data-prompt="OpenWrt UCI yapılandırmasını (system, network, wireless) kontrol et." data-i18n="chip_uci">📡 UCI</button>
+          <button class="chip-btn" data-prompt="Kablosuz ağları (WiFi) ve bağlı olan kablosuz istemcileri listele." data-i18n="chip_wifi">📶 WiFi</button>
+        </div>
+
+        <!-- Cihazı Tanı Butonu -->
+        <button id="btn-scan-device" class="btn btn-primary btn-sm" data-i18n-title="btn_scan_device" data-i18n="btn_scan_device">
+          🔍 Cihazı Tanı
+        </button>
+
         <!-- Dosya Gezgini (Ayrı Pencere) -->
-        <button id="btn-open-files-modal" class="btn btn-sm" title="Dosya Gezginini Ayrı Pencerede Aç (SFTP/Shell)">
+        <button id="btn-open-files-modal" class="btn btn-sm" data-i18n-title="btn_files" data-i18n="btn_files">
           📁 Dosya Gezgini
         </button>
 
-        <!-- Minimalist Ayarlar & Cihaz Yöneticisi (Ayrı Pencere) -->
-        <button id="btn-open-settings-modal" class="btn btn-icon btn-sm" title="Ayarlar & Cihaz Yöneticisini Aç">
+        <!-- Dil Değiştirici (TR / EN) -->
+        <button id="btn-lang-switch" class="btn btn-sm" title="Switch Language / Dili Değiştir">
+          🌐 TR
+        </button>
+
+        <!-- Ayarlar & Cihaz Yöneticisi (Ayrı Pencere) -->
+        <button id="btn-open-settings-modal" class="btn btn-icon btn-sm" data-i18n-title="btn_settings">
           ⚙️
         </button>
       </div>
@@ -62,44 +93,27 @@
       <!-- ÜST ALAN: ANA SOHBET ÇALIŞMA ALANI -->
       <section class="chat-section-container">
         
-        <!-- AI Başlık ve Hızlı Eylem Çipleri -->
-        <div class="ai-chamber-header">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <strong>AI Ağ Ajanı</strong>
-            <span id="active-ai-badge" class="brand-badge">Gemini</span>
-            <span class="brand-badge" style="background: #064e3b; color: #34d399; font-weight: bold;">⚡ Tam Otonom Ajan (Zero-Click)</span>
-          </div>
-          <div style="display: flex; gap: 6px;">
-            <button id="btn-scan-device" class="btn btn-primary btn-sm" title="Cihaz donanım ve OS profilini çıkarıp hafızaya kaydeder">
-              🔍 Cihazı Tanı
-            </button>
-            <button id="btn-clear-chat" class="btn btn-sm" title="Sohbeti Temizle">
-              🗑️
-            </button>
-          </div>
-        </div>
-
-        <!-- Hızlı Eylem Çipleri -->
-        <div class="ai-chips-bar">
-          <button class="chip-btn" data-prompt="Cihazın CPU, RAM ve Disk kullanım durumunu detaylı incele.">📊 RAM & Disk</button>
-          <button class="chip-btn" data-prompt="Aktif ağ arayüzlerini, IP adreslerini ve routing tablosunu analiz et.">🌐 Ağ & IP</button>
-          <button class="chip-btn" data-prompt="OpenWrt UCI yapılandırmasını (system, network, wireless) kontrol et.">📡 OpenWrt UCI</button>
-          <button class="chip-btn" data-prompt="Sistemde çalışan servisleri, portları ve olası hataları listele.">⚙️ Servisler</button>
-          <button class="chip-btn" data-prompt="Son sistem günlüklerini (dmesg / logread) oku ve anormallikleri özetle.">📜 Loglar</button>
-        </div>
-
         <!-- Sohbet Mesaj Akışı -->
         <div id="ai-chat-box" class="ai-chat-messages">
-          <div class="chat-bubble chat-bubble-assistant">
-            <strong>NetCommander AI:</strong> Merhaba! SSH veya Telnet üzerinden bağlandığınız cihazı <strong>tam otonom olarak</strong> yönetebilirim. İstediğiniz görevi yazdığınızda komutlar otomatik olarak terminale gönderilir, çıktıları arka planda otomatik analiz edilir ve net bir Türkçe özet olarak size sunulur. Başlamak için üstteki <strong>"+ Yeni Bağlantı"</strong> butonuna tıklayın.
+          <div class="chat-row chat-row-assistant">
+            <div class="chat-bubble-header">
+              <span data-i18n="assistant">🤖 NetCommander AI</span>
+              <span id="active-mode-badge" class="brand-badge" style="background: #064e3b; color: #34d399; font-size: 9px; margin-left: 4px;" data-i18n="badge_autonomous">⚡ Otonom Ajan</span>
+            </div>
+            <div class="chat-bubble chat-bubble-assistant" data-i18n="welcome_message">
+              Merhaba! SSH veya Telnet üzerinden bağlandığınız cihazı <strong>tam otonom veya onaylı</strong> olarak yönetebilirim. Başlamak için üstteki <strong>"+ Yeni Bağlantı"</strong> butonuna tıklayın.
+            </div>
           </div>
         </div>
 
         <!-- AI Prompt Giriş Alanı (Ortalanmış) -->
         <div class="ai-input-bar-container">
           <div class="ai-input-bar">
-            <input type="text" id="ai-input-text" class="form-input" placeholder="AI Ajanına bir görev verin (örn: cihaz ne zamandır açık, kablosuz ağları listele)..." />
-            <button id="btn-ai-send" class="btn btn-primary">Gönder</button>
+            <input type="text" id="ai-input-text" class="form-input" placeholder="AI Ajanına bir görev verin (örn: cihaz ne zamandır açık, kablosuz ağları listele)..." data-i18n-placeholder="input_placeholder" />
+            <button id="btn-clear-chat" class="btn btn-sm" data-i18n-title="btn_clear_chat" style="padding: 8px 10px;">
+              🗑️
+            </button>
+            <button id="btn-ai-send" class="btn btn-primary" data-i18n="btn_send">Gönder</button>
           </div>
         </div>
       </section>
@@ -111,15 +125,15 @@
       <section id="terminal-pane" class="terminal-horizontal-pane">
         <div class="terminal-pane-header">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-cyan);" id="terminal-device-title">
+            <span style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-cyan);" id="terminal-device-title" data-i18n="terminal_idle">
               [Canlı Terminal - Boşta]
             </span>
           </div>
           <div style="display: flex; gap: 6px; align-items: center;">
-            <button id="btn-term-clear" class="btn btn-sm">Temizle</button>
-            <button id="btn-term-copy" class="btn btn-sm">Kopyala</button>
-            <button id="btn-term-paste" class="btn btn-sm">Yapıştır</button>
-            <button id="btn-term-toggle-collapse" class="btn btn-sm" title="Terminali Küçült / Genişlet">
+            <button id="btn-term-clear" class="btn btn-sm" data-i18n="btn_term_clear">Temizle</button>
+            <button id="btn-term-copy" class="btn btn-sm" data-i18n="btn_term_copy">Kopyala</button>
+            <button id="btn-term-paste" class="btn btn-sm" data-i18n="btn_term_paste">Yapıştır</button>
+            <button id="btn-term-toggle-collapse" class="btn btn-sm" data-i18n-title="btn_term_toggle">
               🔽
             </button>
           </div>
@@ -132,9 +146,9 @@
     <!-- ALT BİLGİ ÇUBUĞU (FOOTER) -->
     <footer class="app-footer">
       <div style="display: flex; gap: 16px;">
-        <div><span>Aktif Oturum:</span> <strong id="footer-session-title">Bağlantı Yok</strong></div>
-        <div><span>Protokol:</span> <strong id="footer-protocol">-</strong></div>
-        <div><span>Hafıza Kaydı:</span> <strong id="footer-memory-count">0</strong></div>
+        <div><span data-i18n="footer_session">Aktif Oturum:</span> <strong id="footer-session-title" data-i18n="no_connection">Bağlantı Yok</strong></div>
+        <div><span data-i18n="footer_protocol">Protokol:</span> <strong id="footer-protocol">-</strong></div>
+        <div><span data-i18n="footer_memory">Hafıza Kaydı:</span> <strong id="footer-memory-count">0</strong></div>
       </div>
       <div>NetCommander AI &copy; 2026</div>
     </footer>
@@ -145,11 +159,11 @@
   <div id="modal-scan-progress" class="modal-overlay">
     <div class="modal-box" style="width: 440px;">
       <div class="modal-header">
-        <span>🔍 Cihaz Tanıma Taraması</span>
+        <span data-i18n="scan_title">🔍 Cihaz Tanıma Taraması</span>
       </div>
       <div class="modal-body" style="text-align: center; padding: 24px;">
         <div style="font-size: 28px; margin-bottom: 12px;">⚡</div>
-        <p id="scan-progress-step" style="font-size: 13px; margin-bottom: 16px;">Sistem komutları çalıştırılıyor...</p>
+        <p id="scan-progress-step" style="font-size: 13px; margin-bottom: 16px;" data-i18n="scan_checking">Bağlantı ve sistem bilgileri kontrol ediliyor...</p>
         <div style="background: var(--bg-tertiary); height: 8px; border-radius: 4px; overflow: hidden; width: 100%;">
           <div id="scan-progress-bar" style="background: var(--accent-cyan); height: 100%; width: 20%; transition: width 0.3s;"></div>
         </div>
@@ -163,6 +177,7 @@
   <script src="vendor/addon-web-links.js"></script>
   <script src="vendor/addon-search.js"></script>
   
+  <script src="js/i18n.js"></script>
   <script src="js/terminal_view.js"></script>
   <script src="js/tab_management.js"></script>
   <script src="js/app.js"></script>

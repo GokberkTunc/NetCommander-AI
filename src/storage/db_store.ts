@@ -21,58 +21,68 @@ interface DatabaseSchema {
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
-  activeProvider: 'gemini',
+  language: 'tr',
+  executionMode: 'autonomous',
+  activeProvider: 'google_web_session',
   providers: {
-    openai: {
-      provider: 'openai',
-      apiKey: '',
-      model: 'gpt-4o-mini',
-      enabled: false,
-      autoApproveSafeCommands: true,
-      temperature: 0.2,
-    },
-    anthropic: {
-      provider: 'anthropic',
-      apiKey: '',
-      model: 'claude-3-5-sonnet-20241022',
-      enabled: false,
-      autoApproveSafeCommands: true,
-      temperature: 0.2,
-    },
-    gemini: {
-      provider: 'gemini',
-      apiKey: '',
-      model: 'gemini-2.5-flash',
-      enabled: true,
-      autoApproveSafeCommands: true,
-      temperature: 0.2,
-    },
     google_web_session: {
-      provider: 'google_web_session',
       model: 'gemini-pro',
-      enabled: false,
-      autoApproveSafeCommands: true,
     },
     lmstudio: {
-      provider: 'lmstudio',
-      customEndpoint: 'http://localhost:1234/v1',
+      endpoint: 'http://localhost:1234/v1',
       model: 'local-model',
-      enabled: false,
-      autoApproveSafeCommands: true,
-      temperature: 0.2,
+    },
+    ollama: {
+      endpoint: 'http://localhost:11434',
+      model: 'llama3.2',
+    },
+    custom_openai: {
+      endpoint: 'http://localhost:8000/v1',
+      apiKey: '',
+      model: 'default',
+    },
+    gemini: {
+      apiKey: '',
+      model: 'gemini-2.5-flash',
+    },
+    deepseek: {
+      apiKey: '',
+      model: 'deepseek-chat',
+      endpoint: 'https://api.deepseek.com/v1',
+    },
+    groq: {
+      apiKey: '',
+      model: 'llama-3.3-70b-versatile',
+      endpoint: 'https://api.groq.com/openai/v1',
+    },
+    openrouter: {
+      apiKey: '',
+      model: 'meta-llama/llama-3.3-70b-instruct',
+      endpoint: 'https://openrouter.ai/api/v1',
+    },
+    openai: {
+      apiKey: '',
+      model: 'gpt-4o-mini',
+    },
+    anthropic: {
+      apiKey: '',
+      model: 'claude-3-5-sonnet-20241022',
+    },
+    mistral: {
+      apiKey: '',
+      model: 'mistral-large-latest',
+      endpoint: 'https://api.mistral.ai/v1',
     },
   },
   tray: {
     minimizeToTray: true,
     closeToTray: true,
-    showNotifications: true,
+    startMinimized: false,
   },
   terminal: {
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: "'Consolas', 'Courier New', 'Fira Code', monospace",
     theme: 'retro-dark',
-    cursorBlink: true,
-    scrollback: 5000,
   },
 };
 
