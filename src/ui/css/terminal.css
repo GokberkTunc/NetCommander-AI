@@ -1,0 +1,36 @@
+/* Terminal container and xterm custom styling */
+.xterm {
+  height: 100%;
+  padding: 4px;
+  font-feature-settings: "liga" 0;
+  position: relative;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.xterm .xterm-viewport {
+  background-color: #000000 !important;
+  overflow-y: scroll;
+}
+
+.xterm .xterm-screen {
+  position: relative;
+}
+
+.terminal-search-bar {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-highlight);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  display: none;
+  align-items: center;
+  gap: 6px;
+  z-index: 50;
+}
+
+.terminal-search-bar.active {
+  display: flex;
+}

@@ -1,0 +1,302 @@
+/* NetCommander AI - Core Theme & Chat-First Layout */
+:root {
+  --bg-base: #0a0d14;
+  --bg-primary: #0f141c;
+  --bg-secondary: #141b26;
+  --bg-tertiary: #1b2433;
+  --bg-hover: #222d3d;
+  --bg-input: #0b0f17;
+
+  --border-color: #232f42;
+  --border-highlight: #33445c;
+  
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+
+  --accent-cyan: #00e5ff;
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
+  --accent-blue: #3b82f6;
+
+  --font-sans: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  --font-mono: 'Consolas', 'Courier New', 'Fira Code', monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  --header-height: 44px;
+  --footer-height: 24px;
+}
+
+[data-theme="retro-amber"] {
+  --bg-base: #120d04;
+  --bg-primary: #1c1507;
+  --bg-secondary: #291e0a;
+  --bg-tertiary: #38290e;
+  --border-color: #4a3613;
+  --text-main: #ffb300;
+  --text-muted: #d99b00;
+  --text-dim: #996e00;
+  --accent-cyan: #ffc107;
+  --accent-emerald: #ffca28;
+}
+
+[data-theme="retro-matrix"] {
+  --bg-base: #030d06;
+  --bg-primary: #07170c;
+  --bg-secondary: #0c2413;
+  --bg-tertiary: #13331b;
+  --border-color: #1a4224;
+  --text-main: #00ff66;
+  --text-muted: #00cc52;
+  --text-dim: #008f39;
+  --accent-cyan: #00ff88;
+  --accent-emerald: #00e676;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-base);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  user-select: none;
+}
+
+/* App Master Layout (Chat-First Full-Width Canvas) */
+.app-master-container {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* TOP HEADER BAR */
+.app-top-header {
+  height: var(--header-height);
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.header-left-zone {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow-x: auto;
+  flex: 1;
+}
+
+.header-brand-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--accent-cyan);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* Device Session Tabs in Header */
+.device-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+}
+
+.device-tab-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.device-tab-item:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-main);
+  border-color: var(--border-highlight);
+}
+
+.device-tab-item.active {
+  background: var(--bg-tertiary);
+  color: var(--accent-cyan);
+  border-color: var(--accent-cyan);
+  font-weight: 600;
+}
+
+.device-tab-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-left: 2px;
+}
+
+.device-tab-close:hover {
+  background: var(--accent-rose);
+  color: #fff;
+}
+
+.btn-add-device-tab {
+  background: transparent;
+  border: 1px dashed var(--border-color);
+  color: var(--text-dim);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.btn-add-device-tab:hover {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+}
+
+/* Header Right Zone */
+.header-right-zone {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.connection-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+/* MAIN SPLIT VIEW (Vertical: Chat on Top, Terminal on Bottom) */
+.main-vertical-split {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+/* UPPER SECTION: CHAT AREA */
+.chat-section-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 180px;
+  background: var(--bg-base);
+  overflow: hidden;
+}
+
+/* HORIZONTAL RESIZER DIVIDER */
+.horizontal-resizer {
+  height: 6px;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  cursor: row-resize;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: background 0.15s ease;
+}
+
+.horizontal-resizer:hover, .horizontal-resizer.resizing {
+  background: var(--accent-cyan);
+}
+
+.horizontal-resizer::after {
+  content: '';
+  width: 32px;
+  height: 2px;
+  background: var(--text-dim);
+  border-radius: 1px;
+}
+
+/* LOWER SECTION: HORIZONTAL TERMINAL PANE */
+.terminal-horizontal-pane {
+  height: 240px;
+  min-height: 36px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+  overflow: hidden;
+  flex-shrink: 0;
+  transition: height 0.05s ease;
+}
+
+.terminal-horizontal-pane.collapsed {
+  height: 36px !important;
+}
+
+.terminal-pane-header {
+  height: 32px;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  flex-shrink: 0;
+}
+
+.terminal-view-host {
+  flex: 1;
+  height: calc(100% - 32px);
+  width: 100%;
+  background: #000;
+  position: relative;
+  overflow: hidden;
+}
+
+/* App Bottom Footer */
+.app-footer {
+  height: var(--footer-height);
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  font-size: 11px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}

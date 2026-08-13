@@ -1,0 +1,57 @@
+{
+  "name": "netcommander-ai",
+  "version": "1.0.0",
+  "description": "Windows için Modüler, AI Destekli SSH/Telnet & SFTP Ağ Yönetim Uygulaması",
+  "main": "dist/main/main.js",
+  "author": "NetCommander AI Team",
+  "license": "MIT",
+  "scripts": {
+    "build:ts": "tsc",
+    "copy:assets": "node scripts/copy_assets.js",
+    "build": "npm run build:ts && npm run copy:assets",
+    "start": "npm run build && electron .",
+    "dist": "npm run build && electron-builder --win",
+    "dist:portable": "npm run build && electron-builder --win portable"
+  },
+  "build": {
+    "appId": "com.netcommander.ai",
+    "productName": "NetCommander AI",
+    "copyright": "Copyright © 2026 NetCommander AI",
+    "directories": {
+      "output": "dist-package"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "NetCommander AI"
+    },
+    "files": [
+      "dist/**/*",
+      "assets/**/*",
+      "package.json"
+    ]
+  },
+  "dependencies": {
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/addon-search": "^0.15.0",
+    "@xterm/addon-web-links": "^0.11.0",
+    "@xterm/xterm": "^5.5.0",
+    "ssh2": "^1.16.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "@types/ssh2": "^1.15.4",
+    "electron": "^34.2.0",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.7.3"
+  }
+}

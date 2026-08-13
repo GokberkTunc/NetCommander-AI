@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NetCommander AI - Dosya Gezgini (SFTP / Shell)</title>
+  <link rel="stylesheet" href="css/retro_theme.css">
+  <link rel="stylesheet" href="css/components.css">
+  <style>
+    body {
+      background: var(--bg-base);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      width: 100vw;
+    }
+    .standalone-files-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body data-theme="retro-dark">
+
+  <div class="standalone-files-container">
+    
+    <!-- Explorer Toolbar -->
+    <header class="explorer-toolbar">
+      <div style="display: flex; align-items: center; gap: 8px; margin-right: 12px;">
+        <span style="font-weight: 700; color: var(--accent-cyan);">📁 SFTP GEZGİNİ</span>
+        <span id="files-active-device-badge" class="brand-badge">Bağlantı Aranıyor...</span>
+      </div>
+
+      <button id="btn-sftp-up" class="btn btn-sm" title="Üst Dizine Çık">⬆️ Üst Dizin</button>
+      <button id="btn-sftp-refresh" class="btn btn-sm" title="Yenile">🔄 Yenile</button>
+      
+      <div class="explorer-address-bar">
+        <span style="color: var(--text-dim); margin-right: 6px; font-family: var(--font-mono);">📁</span>
+        <input type="text" id="sftp-current-path" class="form-input form-input-mono" value="/" style="border: none; padding: 4px; background: transparent; font-size: 12px;" />
+      </div>
+
+      <button id="btn-sftp-go" class="btn btn-sm">Git</button>
+      <button id="btn-sftp-upload" class="btn btn-primary btn-sm">📤 Dosya Yükle</button>
+      <button id="btn-sftp-mkdir" class="btn btn-sm">📁 Yeni Klasör</button>
+      <button id="btn-sftp-newfile" class="btn btn-sm">📄 Yeni Dosya</button>
+    </header>
+
+    <!-- Explorer Main Split -->
+    <main class="explorer-main-split">
+      <!-- Sol: Klasör Ağacı -->
+      <aside class="explorer-tree-pane">
+        <div class="tree-section-title">Hızlı Dizinler</div>
+        <button class="tree-item-btn quick-path-btn" data-path="/"><span>💾</span> Kök Dizin (/)</button>
+        <button class="tree-item-btn quick-path-btn" data-path="/etc"><span>⚙️</span> /etc</button>
+        <button class="tree-item-btn quick-path-btn" data-path="/etc/config"><span>📡</span> /etc/config (OpenWrt)</button>
+        <button class="tree-item-btn quick-path-btn" data-path="/root"><span>👑</span> /root</button>
+        <button class="tree-item-btn quick-path-btn" data-path="/tmp"><span>⚡</span> /tmp</button>
+        <button class="tree-item-btn quick-path-btn" data-path="/var"><span>📊</span> /var</button>
+        <button class="tree-item-btn quick-path-btn" data-path="/home"><span>👥</span> /home</button>
+        <button class="tree-item-btn quick-path-btn" data-path="/www"><span>🌐</span> /www</button>
+      </aside>
+
+      <!-- Sağ: Dosya Tablosu -->
+      <section class="explorer-files-pane">
+        <table class="files-table">
+          <thead>
+            <tr>
+              <th style="width: 45%;">Ad</th>
+              <th style="width: 15%;">Boyut</th>
+              <th style="width: 15%;">İzinler</th>
+              <th style="width: 15%;">Değiştirilme</th>
+              <th style="width: 10%;">İşlemler</th>
+            </tr>
+          </thead>
+          <tbody id="sftp-files-tbody">
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 28px;">
+                Dizin listeleniyor...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+
+  </div>
+
+  <!-- MODAL: SFTP Metin Düzenleyici -->
+  <div id="modal-file-editor" class="modal-overlay">
+    <div class="modal-box modal-box-large">
+      <div class="modal-header">
+        <span id="editor-file-title">Dosya Düzenleyici</span>
+        <button class="btn btn-sm btn-close-editor">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 10px;">
+        <textarea id="remote-file-editor-text" class="form-textarea form-input-mono" style="height: 440px; font-size: 12px; resize: vertical;"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-close-editor">Kapat</button>
+        <button id="btn-save-remote-file" class="btn btn-success">Kaydet & Cihaza Gönder</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/files_standalone.js"></script>
+</body>
+</html>
