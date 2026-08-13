@@ -22,8 +22,6 @@
 > 
 > The entire backend architecture, Electron desktop foundation, multi-session tabs, SSH2/Telnet/SFTP protocol engines, Google Gemini Web DOM streaming integration, self-correcting error-handling loop, and modern retro/dark UI were **100% pair-programmed and built end-to-end with Google DeepMind Antigravity AI** solely through natural language interaction.
 > 
-> This project stands as concrete proof of how next-generation AI agents empower anyone to build production-ready, compiled desktop applications from scratch.
-
 ---
 
 ## 🌟 Key Features
@@ -102,8 +100,6 @@ build.bat
 > 
 > Projenin tüm TypeScript/Node.js backend mimarisi, Electron masaüstü altyapısı, çoklu sekme ve oturum yönetimi, SSH2/Telnet/SFTP protokol motorları, Google Gemini Web DOM streaming entegrasyonu, hata ayıklama sistemleri ve modern Retro/Dark kullanıcı arayüzü **%100 Google DeepMind Antigravity AI** asistanı ile doğal dilde konuşularak, adım adım birlikte programlanmıştır (pair-programming).
 > 
-> Bu proje; yapay zekanın sadece basit kod parçaları üretmekle kalmayıp, sıfırdan üretime hazır, paketlenmiş profesyonel masaüstü yazılımları inşa edebileceğinin somut bir kanıtıdır.
-
 ---
 
 ## 🌟 Öne Çıkan Özellikler
