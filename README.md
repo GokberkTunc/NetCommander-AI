@@ -2,10 +2,21 @@
 
 > **Windows için Modüler, Çoklu Sekmeli ve Tam Otonom (Zero-Click) Yapay Zeka Destekli SSH & Telnet Ağ Yönetim Uygulaması**
 
+[![Built With Antigravity](https://img.shields.io/badge/Built%20With-Google%20DeepMind%20Antigravity-8A2BE2.svg)](https://deepmind.google/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Windows-0078d7.svg)](https://microsoft.com/windows)
 [![Electron](https://img.shields.io/badge/Framework-Electron%2034-47848F.svg)](https://www.electronjs.org/)
 [![TypeScript](https://img.shields.io/badge/Language-TypeScript-3178c6.svg)](https://www.typescriptlang.org/)
+
+---
+
+## 💡 Bu Projenin Özel Hikayesi (%100 AI Tarafından Geliştirildi)
+
+> **Not:** Bu projenin arkasındaki fikir ve vizyon bana ait olsa da, **hayatımda tek bir satır kod yazmadım ve geleneksel yazılım geliştirme bilgisine sahip değilim.**
+> 
+> Projenin tüm TypeScript/Node.js backend mimarisi, Electron masaüstü altyapısı, çoklu sekme ve oturum yönetimi, SSH2/Telnet/SFTP protokol motorları, Google Gemini Web DOM streaming entegrasyonu, hata ayıklama sistemleri ve modern Retro/Dark kullanıcı arayüzü **%100 Google DeepMind Antigravity AI** asistanı ile doğal dilde konuşularak, adım adım birlikte programlanmıştır (pair-programming).
+> 
+> Bu proje; yapay zekanın sadece basit kod parçaları üretmekle kalmayıp, sıfırdan üretime hazır, paketlenmiş profesyonel masaüstü yazılımları inşa edebileceğinin somut bir kanıtıdır.
 
 ---
 
